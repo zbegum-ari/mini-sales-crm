@@ -28,18 +28,14 @@ function dealStageClassName(stage) {
 
 function DealList({ deals, deletingDealId, emptyMessage, onDelete, onEdit }) {
   if (deals.length === 0) {
-    return (
-      <div className="rounded-2xl border border-dashed border-stone-300 bg-stone-50 px-5 py-8 text-center text-sm text-slate-600">
-        {emptyMessage}
-      </div>
-    );
+    return <div className="crm-empty-state">{emptyMessage}</div>;
   }
 
   return (
     <div className="space-y-3">
       {deals.map((deal) => (
         <article
-          className="rounded-2xl border border-stone-200 bg-white px-5 py-4 shadow-sm transition hover:border-stone-300"
+          className="crm-list-card"
           key={deal.id}
         >
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -47,7 +43,7 @@ function DealList({ deals, deletingDealId, emptyMessage, onDelete, onEdit }) {
               <div className="flex flex-wrap items-center gap-2.5">
                 <h3 className="text-lg font-semibold text-slate-900">{deal.title}</h3>
                 <span
-                  className={`rounded-full px-3 py-1 text-xs font-semibold ring-1 ${dealStageClassName(
+                  className={`crm-chip px-3 py-1 text-xs font-semibold ring-1 ${dealStageClassName(
                     deal.pipeline_stage,
                   )}`}
                 >
@@ -72,7 +68,7 @@ function DealList({ deals, deletingDealId, emptyMessage, onDelete, onEdit }) {
               </div>
 
               {deal.notes ? (
-                <div className="rounded-xl bg-slate-50 px-3.5 py-3 text-sm text-slate-600 ring-1 ring-slate-200">
+                <div className="crm-inline-note">
                   <span className="font-medium text-slate-700">Notes:</span> {deal.notes}
                 </div>
               ) : null}
@@ -80,14 +76,14 @@ function DealList({ deals, deletingDealId, emptyMessage, onDelete, onEdit }) {
 
             <div className="flex shrink-0 gap-2">
               <button
-                className="rounded-xl border border-stone-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-stone-50 focus:outline-none focus:ring-4 focus:ring-stone-100"
+                className="crm-button crm-button-inline crm-button-secondary"
                 onClick={() => onEdit(deal)}
                 type="button"
               >
                 Edit
               </button>
               <button
-                className="rounded-xl bg-rose-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-700 focus:outline-none focus:ring-4 focus:ring-rose-100 disabled:cursor-not-allowed disabled:bg-rose-300"
+                className="crm-button crm-button-inline crm-button-danger"
                 disabled={deletingDealId === deal.id}
                 onClick={() => onDelete(deal)}
                 type="button"

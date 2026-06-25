@@ -13,11 +13,9 @@ const emptyForm = {
 
 const statusOptions = ["Lead", "Active", "Inactive", "Customer", "Lost"];
 const companySizeOptions = ["Unknown", "1-10", "11-50", "51-200", "201-500", "500+"];
-const baseFieldClassName =
-  "w-full rounded-xl border bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:ring-4";
-const defaultFieldClassName =
-  "border-stone-200 focus:border-teal-600 focus:ring-teal-100";
-const errorFieldClassName = "border-rose-500 focus:border-rose-500 focus:ring-rose-100";
+const baseFieldClassName = "crm-field";
+const defaultFieldClassName = "crm-field-default";
+const errorFieldClassName = "crm-field-error";
 const emailErrorMessage = "Email must be a valid email address.";
 
 function isValidEmail(value) {
@@ -143,12 +141,12 @@ function CompanyForm({
 
   return (
     <form className="space-y-5" noValidate onSubmit={handleSubmit}>
-      <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+      <p className="crm-form-hint">
         Fields marked with * are required.
       </p>
 
       <div>
-        <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="name">
+        <label className="crm-label" htmlFor="name">
           Company name *
         </label>
         <input
@@ -158,11 +156,11 @@ function CompanyForm({
           onChange={handleChange}
           value={formData.name}
         />
-        {errors.name ? <p className="mt-1 text-sm text-rose-600">{errors.name}</p> : null}
+        {errors.name ? <p className="crm-error-text">{errors.name}</p> : null}
       </div>
 
       <div>
-        <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="industry">
+        <label className="crm-label" htmlFor="industry">
           Industry *
         </label>
         <input
@@ -173,17 +171,12 @@ function CompanyForm({
           placeholder="Software, Retail, Consulting..."
           value={formData.industry}
         />
-        {errors.industry ? (
-          <p className="mt-1 text-sm text-rose-600">{errors.industry}</p>
-        ) : null}
+        {errors.industry ? <p className="crm-error-text">{errors.industry}</p> : null}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label
-            className="mb-1.5 block text-sm font-medium text-slate-700"
-            htmlFor="company_size"
-          >
+          <label className="crm-label" htmlFor="company_size">
             Company size *
           </label>
           <select
@@ -199,13 +192,11 @@ function CompanyForm({
               </option>
             ))}
           </select>
-          {errors.company_size ? (
-            <p className="mt-1 text-sm text-rose-600">{errors.company_size}</p>
-          ) : null}
+          {errors.company_size ? <p className="crm-error-text">{errors.company_size}</p> : null}
         </div>
 
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="status">
+          <label className="crm-label" htmlFor="status">
             Status *
           </label>
           <select
@@ -221,12 +212,12 @@ function CompanyForm({
               </option>
             ))}
           </select>
-          {errors.status ? <p className="mt-1 text-sm text-rose-600">{errors.status}</p> : null}
+          {errors.status ? <p className="crm-error-text">{errors.status}</p> : null}
         </div>
       </div>
 
       <div>
-        <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="website">
+        <label className="crm-label" htmlFor="website">
           Website *
         </label>
         <input
@@ -237,12 +228,12 @@ function CompanyForm({
           placeholder="example.com"
           value={formData.website}
         />
-        {errors.website ? <p className="mt-1 text-sm text-rose-600">{errors.website}</p> : null}
+        {errors.website ? <p className="crm-error-text">{errors.website}</p> : null}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="phone">
+          <label className="crm-label" htmlFor="phone">
             Phone
           </label>
           <input
@@ -256,7 +247,7 @@ function CompanyForm({
         </div>
 
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="email">
+          <label className="crm-label" htmlFor="email">
             Email
           </label>
           <input
@@ -268,16 +259,16 @@ function CompanyForm({
             placeholder="team@example.com"
             value={formData.email}
           />
-          {errors.email ? <p className="mt-1 text-sm text-rose-600">{errors.email}</p> : null}
+          {errors.email ? <p className="crm-error-text">{errors.email}</p> : null}
         </div>
       </div>
 
       <div>
-        <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="notes">
+        <label className="crm-label" htmlFor="notes">
           Notes
         </label>
         <textarea
-          className={`min-h-32 ${baseFieldClassName} ${defaultFieldClassName}`}
+          className={`min-h-32 resize-y ${baseFieldClassName} ${defaultFieldClassName}`}
           id="notes"
           name="notes"
           onChange={handleChange}
@@ -288,7 +279,7 @@ function CompanyForm({
 
       <div className="flex flex-wrap gap-3 pt-2">
         <button
-          className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-blue-300"
+          className="crm-button crm-button-primary"
           disabled={isSubmitting}
           type="submit"
         >
@@ -297,7 +288,7 @@ function CompanyForm({
 
         {onCancel ? (
           <button
-            className="rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-stone-50 focus:outline-none focus:ring-4 focus:ring-stone-100"
+            className="crm-button crm-button-secondary"
             onClick={onCancel}
             type="button"
           >

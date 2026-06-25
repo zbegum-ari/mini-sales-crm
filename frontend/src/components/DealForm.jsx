@@ -10,11 +10,9 @@ const emptyForm = {
 };
 
 const stageOptions = ["Lead", "Qualified", "Proposal", "Negotiation", "Won", "Lost"];
-const baseFieldClassName =
-  "w-full rounded-xl border bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:ring-4";
-const defaultFieldClassName =
-  "border-stone-200 focus:border-teal-600 focus:ring-teal-100";
-const errorFieldClassName = "border-rose-500 focus:border-rose-500 focus:ring-rose-100";
+const baseFieldClassName = "crm-field";
+const defaultFieldClassName = "crm-field-default";
+const errorFieldClassName = "crm-field-error";
 const valueErrorMessage = "Deal value must be a positive number.";
 
 function normalizeFormValues(initialValues) {
@@ -144,12 +142,12 @@ function DealForm({
 
   return (
     <form className="space-y-5" noValidate onSubmit={handleSubmit}>
-      <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+      <p className="crm-form-hint">
         Fields marked with * are required.
       </p>
 
       <div>
-        <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="company_id">
+        <label className="crm-label" htmlFor="company_id">
           Company *
         </label>
         <select
@@ -166,13 +164,11 @@ function DealForm({
             </option>
           ))}
         </select>
-        {errors.company_id ? (
-          <p className="mt-1 text-sm text-rose-600">{errors.company_id}</p>
-        ) : null}
+        {errors.company_id ? <p className="crm-error-text">{errors.company_id}</p> : null}
       </div>
 
       <div>
-        <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="title">
+        <label className="crm-label" htmlFor="title">
           Deal title *
         </label>
         <input
@@ -183,12 +179,12 @@ function DealForm({
           placeholder="Annual software renewal"
           value={formData.title}
         />
-        {errors.title ? <p className="mt-1 text-sm text-rose-600">{errors.title}</p> : null}
+        {errors.title ? <p className="crm-error-text">{errors.title}</p> : null}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="value">
+          <label className="crm-label" htmlFor="value">
             Deal value *
           </label>
           <input
@@ -200,14 +196,11 @@ function DealForm({
             placeholder="15000"
             value={formData.value}
           />
-          {errors.value ? <p className="mt-1 text-sm text-rose-600">{errors.value}</p> : null}
+          {errors.value ? <p className="crm-error-text">{errors.value}</p> : null}
         </div>
 
         <div>
-          <label
-            className="mb-1.5 block text-sm font-medium text-slate-700"
-            htmlFor="pipeline_stage"
-          >
+          <label className="crm-label" htmlFor="pipeline_stage">
             Pipeline stage *
           </label>
           <select
@@ -224,16 +217,13 @@ function DealForm({
             ))}
           </select>
           {errors.pipeline_stage ? (
-            <p className="mt-1 text-sm text-rose-600">{errors.pipeline_stage}</p>
+            <p className="crm-error-text">{errors.pipeline_stage}</p>
           ) : null}
         </div>
       </div>
 
       <div>
-        <label
-          className="mb-1.5 block text-sm font-medium text-slate-700"
-          htmlFor="expected_close_date"
-        >
+        <label className="crm-label" htmlFor="expected_close_date">
           Expected close date *
         </label>
         <input
@@ -245,16 +235,16 @@ function DealForm({
           value={formData.expected_close_date}
         />
         {errors.expected_close_date ? (
-          <p className="mt-1 text-sm text-rose-600">{errors.expected_close_date}</p>
+          <p className="crm-error-text">{errors.expected_close_date}</p>
         ) : null}
       </div>
 
       <div>
-        <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="notes">
+        <label className="crm-label" htmlFor="notes">
           Notes
         </label>
         <textarea
-          className={`min-h-32 ${baseFieldClassName} ${defaultFieldClassName}`}
+          className={`min-h-32 resize-y ${baseFieldClassName} ${defaultFieldClassName}`}
           id="notes"
           name="notes"
           onChange={handleChange}
@@ -265,7 +255,7 @@ function DealForm({
 
       <div className="flex flex-wrap gap-3 pt-2">
         <button
-          className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-blue-300"
+          className="crm-button crm-button-primary"
           disabled={isSubmitting}
           type="submit"
         >
@@ -274,7 +264,7 @@ function DealForm({
 
         {onCancel ? (
           <button
-            className="rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-stone-50 focus:outline-none focus:ring-4 focus:ring-stone-100"
+            className="crm-button crm-button-secondary"
             onClick={onCancel}
             type="button"
           >

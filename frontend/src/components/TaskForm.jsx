@@ -10,11 +10,9 @@ const emptyForm = {
 };
 
 const taskStatusOptions = ["Open", "Completed", "Cancelled"];
-const baseFieldClassName =
-  "w-full rounded-xl border bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:ring-4";
-const defaultFieldClassName =
-  "border-stone-200 focus:border-teal-600 focus:ring-teal-100";
-const errorFieldClassName = "border-rose-500 focus:border-rose-500 focus:ring-rose-100";
+const baseFieldClassName = "crm-field";
+const defaultFieldClassName = "crm-field-default";
+const errorFieldClassName = "crm-field-error";
 
 function normalizeFormValues(initialValues) {
   return {
@@ -160,12 +158,12 @@ function TaskForm({
 
   return (
     <form className="space-y-5" noValidate onSubmit={handleSubmit}>
-      <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+      <p className="crm-form-hint">
         Fields marked with * are required.
       </p>
 
       <div>
-        <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="company_id">
+        <label className="crm-label" htmlFor="company_id">
           Company *
         </label>
         <select
@@ -182,13 +180,11 @@ function TaskForm({
             </option>
           ))}
         </select>
-        {errors.company_id ? (
-          <p className="mt-1 text-sm text-rose-600">{errors.company_id}</p>
-        ) : null}
+        {errors.company_id ? <p className="crm-error-text">{errors.company_id}</p> : null}
       </div>
 
       <div>
-        <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="title">
+        <label className="crm-label" htmlFor="title">
           Task title *
         </label>
         <input
@@ -199,12 +195,12 @@ function TaskForm({
           placeholder="Follow up on pricing proposal"
           value={formData.title}
         />
-        {errors.title ? <p className="mt-1 text-sm text-rose-600">{errors.title}</p> : null}
+        {errors.title ? <p className="crm-error-text">{errors.title}</p> : null}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="due_date">
+          <label className="crm-label" htmlFor="due_date">
             Due date *
           </label>
           <input
@@ -215,13 +211,11 @@ function TaskForm({
             type="date"
             value={formData.due_date}
           />
-          {errors.due_date ? (
-            <p className="mt-1 text-sm text-rose-600">{errors.due_date}</p>
-          ) : null}
+          {errors.due_date ? <p className="crm-error-text">{errors.due_date}</p> : null}
         </div>
 
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="status">
+          <label className="crm-label" htmlFor="status">
             Status *
           </label>
           <select
@@ -237,12 +231,12 @@ function TaskForm({
               </option>
             ))}
           </select>
-          {errors.status ? <p className="mt-1 text-sm text-rose-600">{errors.status}</p> : null}
+          {errors.status ? <p className="crm-error-text">{errors.status}</p> : null}
         </div>
       </div>
 
       <div>
-        <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="deal_id">
+        <label className="crm-label" htmlFor="deal_id">
           Deal
         </label>
         <select
@@ -259,25 +253,20 @@ function TaskForm({
             </option>
           ))}
         </select>
-        {errors.deal_id ? (
-          <p className="mt-1 text-sm text-rose-600">{errors.deal_id}</p>
-        ) : null}
+        {errors.deal_id ? <p className="crm-error-text">{errors.deal_id}</p> : null}
         {formData.company_id && companyDeals.length === 0 ? (
-          <p className="mt-2 text-sm text-slate-500">
+          <p className="mt-2 text-sm leading-6 text-slate-500">
             No deals found for this company. You can still create a company-level task.
           </p>
         ) : null}
       </div>
 
       <div>
-        <label
-          className="mb-1.5 block text-sm font-medium text-slate-700"
-          htmlFor="description"
-        >
+        <label className="crm-label" htmlFor="description">
           Description
         </label>
         <textarea
-          className={`min-h-32 ${baseFieldClassName} ${defaultFieldClassName}`}
+          className={`min-h-32 resize-y ${baseFieldClassName} ${defaultFieldClassName}`}
           id="description"
           name="description"
           onChange={handleChange}
@@ -288,7 +277,7 @@ function TaskForm({
 
       <div className="flex flex-wrap gap-3 pt-2">
         <button
-          className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-blue-300"
+          className="crm-button crm-button-primary"
           disabled={isSubmitting}
           type="submit"
         >
@@ -297,7 +286,7 @@ function TaskForm({
 
         {onCancel ? (
           <button
-            className="rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-stone-50 focus:outline-none focus:ring-4 focus:ring-stone-100"
+            className="crm-button crm-button-secondary"
             onClick={onCancel}
             type="button"
           >

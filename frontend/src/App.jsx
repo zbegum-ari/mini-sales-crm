@@ -71,7 +71,7 @@ const sectionMeta = {
   },
   dashboard: {
     title: "Dashboard",
-    description: "Overview panels will be added in Milestone 6.",
+    description: "Review key CRM totals, pipeline value, and task health in one place.",
   },
 };
 
@@ -104,50 +104,59 @@ function AppShellHeader({ activeSection, isConnected, sections, status, onSectio
   const badge = getStatusBadge(isConnected, status);
 
   return (
-    <section className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
-      <div className="h-1 w-full bg-gradient-to-r from-teal-600 via-cyan-500 to-sky-400" />
-      <div className="border-b border-stone-200 px-6 py-5 sm:px-7">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="space-y-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">
-                Mini Sales CRM
-              </p>
-              <h1 className="mt-1 text-2xl font-semibold text-slate-950">
-                Mini Sales CRM
-              </h1>
-              <p className="mt-1 text-sm text-slate-500">Internal sales workspace</p>
+    <section className="crm-panel overflow-hidden">
+      <div className="border-b border-slate-200/90 px-6 py-6 sm:px-7">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+          <div className="min-w-0 space-y-5">
+            <div className="flex items-start gap-4">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-blue-100 bg-blue-50 text-sm font-semibold text-blue-700 shadow-sm">
+                MS
+              </div>
+
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-cyan-700">
+                  Mini Sales CRM
+                </p>
+                <h1 className="mt-1 text-[1.8rem] font-semibold tracking-tight text-slate-950">
+                  Internal sales workspace
+                </h1>
+                <p className="mt-1.5 max-w-2xl text-sm leading-6 text-slate-500">
+                  Keep your pipeline, follow-ups, and customer records in one calm,
+                  focused local workspace.
+                </p>
+              </div>
             </div>
 
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">
+            <div className="crm-panel-subtle max-w-2xl px-4 py-3.5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                 Current section
               </p>
-              <h2 className="mt-1 text-lg font-semibold text-slate-900">
+              <h2 className="mt-1.5 text-lg font-semibold tracking-tight text-slate-900">
                 {activeMeta.title}
               </h2>
-              <p className="mt-1 text-sm text-slate-500">{activeMeta.description}</p>
+              <p className="mt-1.5 text-sm leading-6 text-slate-500">
+                {activeMeta.description}
+              </p>
             </div>
           </div>
 
           <div
-            className={`inline-flex items-center gap-2 self-start rounded-full border px-3.5 py-2 text-sm font-medium ${badge.className}`}
+            className={`inline-flex items-center gap-2 self-start rounded-full border px-3 py-1.5 text-xs font-semibold shadow-sm ${badge.className}`}
           >
-            <span className={`h-2.5 w-2.5 rounded-full ${badge.dotClassName}`} />
+            <span className={`h-2 w-2 rounded-full ${badge.dotClassName}`} />
             {badge.label}
           </div>
         </div>
       </div>
 
-      <nav className="flex flex-wrap gap-2 bg-stone-50/70 px-6 py-4 sm:px-7" aria-label="Primary">
+      <nav
+        className="flex flex-wrap gap-2 bg-slate-50/70 px-6 py-4 sm:px-7"
+        aria-label="Primary"
+      >
         {sections.map((section) => (
           <button
             key={section.id}
-            className={`rounded-xl border px-3.5 py-2 text-sm font-medium transition focus:outline-none focus:ring-4 ${
-              activeSection === section.id
-                ? "border-teal-200 bg-teal-50 text-teal-700 shadow-sm focus:ring-teal-100"
-                : "border-stone-200 bg-white text-slate-600 hover:border-stone-300 hover:bg-stone-50 focus:ring-stone-100"
-            }`}
+            className={`crm-nav-tab ${activeSection === section.id ? "crm-nav-tab-active" : ""}`}
             onClick={() => onSectionChange(section.id)}
             type="button"
           >
@@ -175,12 +184,12 @@ function ModuleSection({
   title,
 }) {
   return (
-    <section className="space-y-5">
-      <div className="rounded-3xl border border-stone-200 bg-white px-5 py-5 shadow-sm sm:px-6">
+    <section className="space-y-4">
+      <div className="crm-panel px-5 py-5 sm:px-6">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
           <div className="max-w-2xl">
-            <h3 className="text-xl font-semibold text-slate-900">{title}</h3>
-            <p className="mt-1.5 text-sm text-slate-500">{description}</p>
+            <h3 className="text-xl font-semibold tracking-tight text-slate-950">{title}</h3>
+            <p className="mt-1.5 text-sm leading-6 text-slate-500">{description}</p>
           </div>
 
           <div className="flex w-full xl:w-auto xl:justify-end">
@@ -209,17 +218,16 @@ function ModuleSection({
       </div>
 
       {isFormOpen ? (
-        <div className="rounded-3xl border border-stone-200 bg-white px-5 py-5 shadow-sm sm:px-6">
-          <div className="flex flex-col gap-3 border-b border-stone-200 pb-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="crm-panel px-5 py-5 sm:px-6">
+          <div className="flex flex-col gap-3 border-b border-slate-200 pb-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h4 className="text-lg font-semibold text-slate-900">{formTitle}</h4>
-              <p className="mt-1 text-sm text-slate-500">
-                Fields marked with * are required.
-              </p>
+              <h4 className="text-lg font-semibold tracking-tight text-slate-950">
+                {formTitle}
+              </h4>
             </div>
 
             <button
-              className="rounded-xl border border-stone-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-stone-50 focus:outline-none focus:ring-4 focus:ring-stone-100"
+              className="crm-control crm-button crm-button-secondary"
               onClick={onCloseForm}
               type="button"
             >
@@ -228,7 +236,7 @@ function ModuleSection({
           </div>
 
           {formError ? (
-            <div className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            <div className="crm-alert crm-alert-danger mt-5">
               {formError}
             </div>
           ) : null}
@@ -237,9 +245,9 @@ function ModuleSection({
         </div>
       ) : null}
 
-      <div className="rounded-3xl border border-stone-200 bg-white px-5 py-5 shadow-sm sm:px-6">
+      <div className="crm-panel px-5 py-5 sm:px-6">
         {listError ? (
-          <div className="mb-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          <div className="crm-alert crm-alert-danger mb-5">
             {listError}
           </div>
         ) : null}
@@ -263,6 +271,7 @@ function App() {
   const [editingCompany, setEditingCompany] = useState(null);
   const [isCompanyFormOpen, setIsCompanyFormOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState("All");
+  const [companySearchQuery, setCompanySearchQuery] = useState("");
   const [contacts, setContacts] = useState([]);
   const [isLoadingContacts, setIsLoadingContacts] = useState(true);
   const [contactsError, setContactsError] = useState("");
@@ -272,6 +281,7 @@ function App() {
   const [editingContact, setEditingContact] = useState(null);
   const [isContactFormOpen, setIsContactFormOpen] = useState(false);
   const [selectedContactCompany, setSelectedContactCompany] = useState(allCompaniesValue);
+  const [contactSearchQuery, setContactSearchQuery] = useState("");
   const [deals, setDeals] = useState([]);
   const [allDeals, setAllDeals] = useState([]);
   const [isLoadingDeals, setIsLoadingDeals] = useState(true);
@@ -550,7 +560,9 @@ function App() {
   }
 
   async function handleDeleteCompany(company) {
-    const confirmed = window.confirm(`Delete ${company.name}?`);
+    const confirmed = window.confirm(
+      `Are you sure you want to delete this company: ${company.name}?`,
+    );
 
     if (!confirmed) {
       return;
@@ -650,7 +662,7 @@ function App() {
 
   async function handleDeleteContact(contact) {
     const confirmed = window.confirm(
-      `Delete ${contact.first_name} ${contact.last_name}?`,
+      `Are you sure you want to delete this contact: ${contact.first_name} ${contact.last_name}?`,
     );
 
     if (!confirmed) {
@@ -718,7 +730,9 @@ function App() {
   }
 
   async function handleDeleteDeal(deal) {
-    const confirmed = window.confirm(`Delete ${deal.title}?`);
+    const confirmed = window.confirm(
+      `Are you sure you want to delete this deal: ${deal.title}?`,
+    );
 
     if (!confirmed) {
       return;
@@ -788,7 +802,7 @@ function App() {
   }
 
   async function handleDeleteActivity(activity) {
-    const confirmed = window.confirm("Delete this activity?");
+    const confirmed = window.confirm("Are you sure you want to delete this activity?");
 
     if (!confirmed) {
       return;
@@ -882,7 +896,9 @@ function App() {
   }
 
   async function handleDeleteTask(task) {
-    const confirmed = window.confirm(`Delete ${task.title}?`);
+    const confirmed = window.confirm(
+      `Are you sure you want to delete this task: ${task.title}?`,
+    );
 
     if (!confirmed) {
       return;
@@ -934,20 +950,47 @@ function App() {
     setIsTaskFormOpen(true);
   }
 
-  const filteredCompanies =
-    selectedStatus === "All"
-      ? companies
-      : companies.filter((company) => company.status === selectedStatus);
+  const normalizedCompanySearchQuery = companySearchQuery.trim().toLowerCase();
+  const filteredCompanies = companies.filter((company) => {
+    const matchesStatus =
+      selectedStatus === "All" ? true : company.status === selectedStatus;
+    const matchesSearch = normalizedCompanySearchQuery
+      ? company.name.toLowerCase().includes(normalizedCompanySearchQuery)
+      : true;
 
-  const companiesEmptyMessage =
-    selectedStatus === "All"
-      ? "No companies yet. Add your first company."
-      : `No companies found with status "${selectedStatus}".`;
+    return matchesStatus && matchesSearch;
+  });
 
-  const contactsEmptyMessage =
-    selectedContactCompany === allCompaniesValue
-      ? "No contacts yet. Add your first contact."
-      : "No contacts found for the selected company.";
+  const normalizedContactSearchQuery = contactSearchQuery.trim().toLowerCase();
+  const filteredContacts = contacts.filter((contact) => {
+    if (!normalizedContactSearchQuery) {
+      return true;
+    }
+
+    return [contact.first_name, contact.last_name, contact.email].some((value) =>
+      value.toLowerCase().includes(normalizedContactSearchQuery),
+    );
+  });
+
+  let companiesEmptyMessage = "No companies yet. Add your first company.";
+
+  if (normalizedCompanySearchQuery && selectedStatus !== "All") {
+    companiesEmptyMessage = `No companies found for "${companySearchQuery.trim()}" with status "${selectedStatus}".`;
+  } else if (normalizedCompanySearchQuery) {
+    companiesEmptyMessage = `No companies found for "${companySearchQuery.trim()}".`;
+  } else if (selectedStatus !== "All") {
+    companiesEmptyMessage = `No companies found with status "${selectedStatus}".`;
+  }
+
+  let contactsEmptyMessage = "No contacts yet. Add your first contact.";
+
+  if (normalizedContactSearchQuery && selectedContactCompany !== allCompaniesValue) {
+    contactsEmptyMessage = "No contacts found for the selected company and search.";
+  } else if (normalizedContactSearchQuery) {
+    contactsEmptyMessage = `No contacts found for "${contactSearchQuery.trim()}".`;
+  } else if (selectedContactCompany !== allCompaniesValue) {
+    contactsEmptyMessage = "No contacts found for the selected company.";
+  }
 
   const dealsEmptyMessage =
     selectedDealStage === "All"
@@ -967,8 +1010,13 @@ function App() {
         : "No tasks found for the selected filters.";
 
   return (
-    <main className="min-h-screen bg-stone-50 px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mx-auto flex max-w-7xl flex-col gap-6">
+    <main className="relative min-h-screen overflow-x-hidden px-4 py-6 sm:px-6 lg:px-8">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-80 overflow-hidden">
+        <div className="absolute left-[8%] top-0 h-56 w-56 rounded-full bg-blue-200/20 blur-3xl" />
+        <div className="absolute right-[12%] top-10 h-48 w-48 rounded-full bg-cyan-200/20 blur-3xl" />
+      </div>
+
+      <div className="relative mx-auto flex max-w-[1180px] flex-col gap-5">
         <AppShellHeader
           activeSection={activeSection}
           isConnected={isConnected}
@@ -982,17 +1030,27 @@ function App() {
             actionLabel="Add company"
             description="View and manage account records, company details, and notes."
             controls={
-              <select
-                className="crm-control crm-select w-40 sm:w-44"
-                onChange={(event) => setSelectedStatus(event.target.value)}
-                value={selectedStatus}
-              >
-                {statusOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option === "All" ? "All statuses" : option}
-                  </option>
-                ))}
-              </select>
+              <>
+                <input
+                  className="crm-control crm-text-control w-full min-w-0 sm:w-56"
+                  onChange={(event) => setCompanySearchQuery(event.target.value)}
+                  placeholder="Search company name"
+                  type="text"
+                  value={companySearchQuery}
+                />
+
+                <select
+                  className="crm-control crm-select w-40 sm:w-44"
+                  onChange={(event) => setSelectedStatus(event.target.value)}
+                  value={selectedStatus}
+                >
+                  {statusOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option === "All" ? "All statuses" : option}
+                    </option>
+                  ))}
+                </select>
+              </>
             }
             formContent={
               <CompanyForm
@@ -1008,7 +1066,7 @@ function App() {
             isFormOpen={isCompanyFormOpen}
             listContent={
               isLoadingCompanies ? (
-                <div className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-8 text-sm text-slate-600">
+                <div className="crm-empty-state">
                   Loading companies...
                 </div>
               ) : (
@@ -1034,22 +1092,32 @@ function App() {
             actionLabel="Add contact"
             description="Manage people linked to your companies and keep their details up to date."
             controls={
-              <select
-                className="crm-control crm-select w-44 sm:w-48"
-                onChange={(event) => setSelectedContactCompany(event.target.value)}
-                value={selectedContactCompany}
-              >
-                <option value={allCompaniesValue}>All companies</option>
-                {companies.map((company) => (
-                  <option key={company.id} value={company.id}>
-                    {company.name}
-                  </option>
-                ))}
-              </select>
+              <>
+                <input
+                  className="crm-control crm-text-control w-full min-w-0 sm:w-64"
+                  onChange={(event) => setContactSearchQuery(event.target.value)}
+                  placeholder="Search name or email"
+                  type="text"
+                  value={contactSearchQuery}
+                />
+
+                <select
+                  className="crm-control crm-select w-44 sm:w-48"
+                  onChange={(event) => setSelectedContactCompany(event.target.value)}
+                  value={selectedContactCompany}
+                >
+                  <option value={allCompaniesValue}>All companies</option>
+                  {companies.map((company) => (
+                    <option key={company.id} value={company.id}>
+                      {company.name}
+                    </option>
+                  ))}
+                </select>
+              </>
             }
             formContent={
               companies.length === 0 ? (
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-700">
+                <div className="crm-alert crm-alert-warning">
                   Create a company before adding contacts.
                 </div>
               ) : (
@@ -1068,12 +1136,12 @@ function App() {
             isFormOpen={isContactFormOpen}
             listContent={
               isLoadingContacts ? (
-                <div className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-8 text-sm text-slate-600">
+                <div className="crm-empty-state">
                   Loading contacts...
                 </div>
               ) : (
                 <ContactList
-                  contacts={contacts}
+                  contacts={filteredContacts}
                   deletingContactId={deletingContactId}
                   emptyMessage={contactsEmptyMessage}
                   onDelete={handleDeleteContact}
@@ -1108,7 +1176,7 @@ function App() {
             }
             formContent={
               companies.length === 0 ? (
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-700">
+                <div className="crm-alert crm-alert-warning">
                   Create a company before adding deals.
                 </div>
               ) : (
@@ -1127,7 +1195,7 @@ function App() {
             isFormOpen={isDealFormOpen}
             listContent={
               isLoadingDeals ? (
-                <div className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-8 text-sm text-slate-600">
+                <div className="crm-empty-state">
                   Loading deals...
                 </div>
               ) : (
@@ -1182,7 +1250,7 @@ function App() {
             }
             formContent={
               companies.length === 0 ? (
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-700">
+                <div className="crm-alert crm-alert-warning">
                   Create a company before adding activities.
                 </div>
               ) : (
@@ -1202,7 +1270,7 @@ function App() {
             isFormOpen={isActivityFormOpen}
             listContent={
               isLoadingActivities ? (
-                <div className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-8 text-sm text-slate-600">
+                <div className="crm-empty-state">
                   Loading activities...
                 </div>
               ) : (
@@ -1269,7 +1337,7 @@ function App() {
             }
             formContent={
               companies.length === 0 ? (
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-700">
+                <div className="crm-alert crm-alert-warning">
                   Create a company before adding tasks.
                 </div>
               ) : (
@@ -1289,7 +1357,7 @@ function App() {
             isFormOpen={isTaskFormOpen}
             listContent={
               isLoadingTasks ? (
-                <div className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-8 text-sm text-slate-600">
+                <div className="crm-empty-state">
                   Loading tasks...
                 </div>
               ) : (
