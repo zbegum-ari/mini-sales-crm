@@ -80,24 +80,25 @@ mini-sales-crm/
 ## Backend Setup for macOS
 
 ```bash
-cd backend
+cd mini-sales-crm
 python3 -m venv .venv
 source .venv/bin/activate
+cd backend
 pip install -r requirements.txt
 ```
 
 ## Frontend Setup for macOS
 
 ```bash
-cd frontend
+cd mini-sales-crm/frontend
 npm install
 ```
 
 ## How To Run The Backend
 
 ```bash
-cd backend
-source .venv/bin/activate
+cd mini-sales-crm/backend
+source ../.venv/bin/activate
 uvicorn app.main:app --reload
 ```
 
@@ -106,7 +107,7 @@ The backend runs on `http://localhost:8000`.
 ## How To Run The Frontend
 
 ```bash
-cd frontend
+cd mini-sales-crm/frontend
 npm run dev
 ```
 
@@ -114,17 +115,17 @@ The frontend runs on `http://localhost:5173`.
 
 ## Local URLs
 
-- Frontend: http://localhost:5173
-- Backend health: http://localhost:8000/health
-- API docs: http://localhost:8000/docs
+- Frontend: [http://localhost:5173](http://localhost:5173/)
+- Backend health: [http://localhost:8000/health](http://localhost:8000/health)
+- API docs: [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ## Seed Sample Data
 
 If you want a quick local demo dataset:
 
 ```bash
-cd backend
-source .venv/bin/activate
+cd mini-sales-crm/backend
+source ../.venv/bin/activate
 python seed.py
 ```
 
@@ -176,16 +177,32 @@ The seed script adds sample companies, contacts, deals, activities, and tasks. I
 - SQLAlchemy relationships between CRM entities
 - Using Codex carefully to iterate in small, testable milestones
 
+## Screenshots
+
+Suggested screenshots for final review:
+
+- Dashboard
+- Companies
+- Contacts
+- Deals
+- Activities
+- Tasks
+- Validation example
+- API docs at [http://localhost:8000/docs](http://localhost:8000/docs)
+
+If screenshots are added later, place them in a `screenshots/` folder and reference them from this section.
+
 ## Acceptance Checklist
 
-- [ ] Frontend starts locally
-- [ ] Backend starts locally
-- [ ] `/health` works
-- [ ] Companies can be created, viewed, edited, and deleted
-- [ ] Contacts can be created, viewed, edited, and deleted
-- [ ] Deals can be created, viewed, edited, and deleted
-- [ ] Activities can be added to companies and deals
-- [ ] Tasks can be created and completed
-- [ ] Dashboard displays summary data
-- [ ] Search and filters work
-- [ ] Code is organized and understandable
+- [x] Frontend starts locally
+- [x] Backend starts locally
+- [x] `/health` works
+- [x] Companies can be created, viewed, edited, and deleted
+- [x] Contacts can be created, viewed, edited, and deleted
+- [x] Deals can be created, viewed, edited, and deleted
+- [x] Activities can be added to companies and deals
+- [x] Tasks can be created and completed
+- [x] Dashboard displays summary data
+- [x] Search and filters work
+- [x] Code is organized and understandable
+- [x] README includes setup instructions
