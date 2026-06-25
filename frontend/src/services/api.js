@@ -96,3 +96,40 @@ export function deleteContact(contactId) {
     method: "DELETE",
   });
 }
+
+export function getDeals(filters = {}) {
+  const searchParams = new URLSearchParams();
+
+  if (filters.companyId) {
+    searchParams.set("company_id", filters.companyId);
+  }
+
+  if (filters.pipelineStage) {
+    searchParams.set("pipeline_stage", filters.pipelineStage);
+  }
+
+  const queryString = searchParams.toString();
+  const path = queryString ? `/deals?${queryString}` : "/deals";
+
+  return request(path);
+}
+
+export function createDeal(dealData) {
+  return request("/deals", {
+    method: "POST",
+    body: JSON.stringify(dealData),
+  });
+}
+
+export function updateDeal(dealId, dealData) {
+  return request(`/deals/${dealId}`, {
+    method: "PUT",
+    body: JSON.stringify(dealData),
+  });
+}
+
+export function deleteDeal(dealId) {
+  return request(`/deals/${dealId}`, {
+    method: "DELETE",
+  });
+}

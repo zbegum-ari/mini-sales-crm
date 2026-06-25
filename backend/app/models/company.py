@@ -19,6 +19,7 @@ class Company(Base):
     email = Column(String, nullable=True)
     notes = Column(Text, nullable=True)
     contacts = relationship("Contact", back_populates="company", cascade="all, delete-orphan")
+    deals = relationship("Deal", back_populates="company", cascade="all, delete-orphan")
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(
         DateTime,
