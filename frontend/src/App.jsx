@@ -8,6 +8,7 @@ import ContactForm from "./components/ContactForm";
 import ContactList from "./components/ContactList";
 import DealForm from "./components/DealForm";
 import DealList from "./components/DealList";
+import Dashboard from "./components/Dashboard";
 import TaskForm from "./components/TaskForm";
 import TaskList from "./components/TaskList";
 import {
@@ -1314,12 +1315,7 @@ function App() {
         ) : null}
 
         {activeSection === "dashboard" ? (
-          <section className="rounded-3xl border border-stone-200 bg-white px-6 py-8 shadow-sm">
-            <h3 className="text-xl font-semibold text-slate-900">Dashboard</h3>
-            <p className="mt-2 text-sm text-slate-500">
-              Dashboard will be implemented in Milestone 6.
-            </p>
-          </section>
+          <Dashboard />
         ) : null}
       </div>
     </main>

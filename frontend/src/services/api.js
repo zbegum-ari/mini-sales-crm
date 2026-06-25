@@ -219,3 +219,7 @@ export function deleteTask(taskId) {
     method: "DELETE",
   });
 }
+
+export function getDashboardSummary() {
+  return request("/dashboard/summary");
+}
