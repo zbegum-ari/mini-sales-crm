@@ -2,8 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session, joinedload
 
 from app.core.database import get_db
+from app.models.activity import Activity
 from app.models.company import Company
 from app.models.deal import Deal
+from app.models.task import Task
 from app.schemas.deal import DealCreate, DealPipelineStage, DealRead, DealUpdate
 
 router = APIRouter(prefix="/deals", tags=["deals"])
@@ -92,6 +94,12 @@ def delete_deal(deal_id: int, db: Session = Depends(get_db)):
 
     if db_deal is None:
         raise HTTPException(status_code=404, detail="Deal not found")
+
+    for activity in db.query(Activity).filter(Activity.deal_id == deal_id).all():
+        activity.deal_id = None
+
+    for task in db.query(Task).filter(Task.deal_id == deal_id).all():
+        task.deal_id = None
 
     db.delete(db_deal)
     db.commit()

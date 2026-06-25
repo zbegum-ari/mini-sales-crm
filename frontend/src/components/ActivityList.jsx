@@ -1,33 +1,35 @@
-function formatCurrency(value) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
-function dealStageClassName(stage) {
-  if (stage === "Won") {
-    return "bg-emerald-50 text-emerald-700 ring-emerald-200";
+function activityTypeClassName(activityType) {
+  if (activityType === "Call") {
+    return "bg-teal-50 text-teal-700 ring-teal-200";
   }
 
-  if (stage === "Lost") {
-    return "bg-rose-50 text-rose-700 ring-rose-200";
-  }
-
-  if (stage === "Proposal") {
-    return "bg-amber-50 text-amber-700 ring-amber-200";
-  }
-
-  if (stage === "Qualified" || stage === "Negotiation") {
+  if (activityType === "Meeting") {
     return "bg-cyan-50 text-cyan-700 ring-cyan-200";
   }
 
-  return "bg-teal-50 text-teal-700 ring-teal-200";
+  if (activityType === "Follow-up") {
+    return "bg-amber-50 text-amber-700 ring-amber-200";
+  }
+
+  if (activityType === "Email") {
+    return "bg-sky-50 text-sky-700 ring-sky-200";
+  }
+
+  return "bg-slate-100 text-slate-700 ring-slate-200";
 }
 
-function DealList({ deals, deletingDealId, emptyMessage, onDelete, onEdit }) {
-  if (deals.length === 0) {
+function activityHeading(activity) {
+  const companyName = activity.company?.name;
+
+  if (companyName) {
+    return `${activity.activity_type} with ${companyName}`;
+  }
+
+  return `${activity.activity_type} activity`;
+}
+
+function ActivityList({ activities, deletingActivityId, emptyMessage, onDelete, onEdit }) {
+  if (activities.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-stone-300 bg-stone-50 px-5 py-8 text-center text-sm text-slate-600">
         {emptyMessage}
@@ -37,21 +39,21 @@ function DealList({ deals, deletingDealId, emptyMessage, onDelete, onEdit }) {
 
   return (
     <div className="space-y-3">
-      {deals.map((deal) => (
+      {activities.map((activity) => (
         <article
           className="rounded-2xl border border-stone-200 bg-white px-5 py-4 shadow-sm transition hover:border-stone-300"
-          key={deal.id}
+          key={activity.id}
         >
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0 space-y-3">
               <div className="flex flex-wrap items-center gap-2.5">
-                <h3 className="text-lg font-semibold text-slate-900">{deal.title}</h3>
+                <h3 className="text-lg font-semibold text-slate-900">{activityHeading(activity)}</h3>
                 <span
-                  className={`rounded-full px-3 py-1 text-xs font-semibold ring-1 ${dealStageClassName(
-                    deal.pipeline_stage,
+                  className={`rounded-full px-3 py-1 text-xs font-semibold ring-1 ${activityTypeClassName(
+                    activity.activity_type,
                   )}`}
                 >
-                  {deal.pipeline_stage}
+                  {activity.activity_type}
                 </span>
               </div>
 
@@ -59,40 +61,40 @@ function DealList({ deals, deletingDealId, emptyMessage, onDelete, onEdit }) {
                 <p>
                   Company:{" "}
                   <span className="font-medium text-slate-700">
-                    {deal.company?.name ?? "Unknown company"}
+                    {activity.company?.name ?? "Unknown company"}
                   </span>
                 </p>
                 <p>
-                  Value:{" "}
+                  Deal:{" "}
                   <span className="font-medium text-slate-700">
-                    {formatCurrency(deal.value)}
+                    {activity.deal?.title ?? "Company-level activity"}
                   </span>
                 </p>
-                <p>Expected close: {deal.expected_close_date}</p>
+                <p>
+                  Date: <span className="font-medium text-slate-700">{activity.activity_date}</span>
+                </p>
               </div>
 
-              {deal.notes ? (
-                <div className="rounded-xl bg-slate-50 px-3.5 py-3 text-sm text-slate-600 ring-1 ring-slate-200">
-                  <span className="font-medium text-slate-700">Notes:</span> {deal.notes}
-                </div>
-              ) : null}
+              <p className="rounded-xl bg-slate-50 px-3.5 py-3 text-sm leading-6 text-slate-600 ring-1 ring-slate-200">
+                {activity.note}
+              </p>
             </div>
 
             <div className="flex shrink-0 gap-2">
               <button
                 className="rounded-xl border border-stone-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-stone-50 focus:outline-none focus:ring-4 focus:ring-stone-100"
-                onClick={() => onEdit(deal)}
+                onClick={() => onEdit(activity)}
                 type="button"
               >
                 Edit
               </button>
               <button
                 className="rounded-xl bg-rose-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-700 focus:outline-none focus:ring-4 focus:ring-rose-100 disabled:cursor-not-allowed disabled:bg-rose-300"
-                disabled={deletingDealId === deal.id}
-                onClick={() => onDelete(deal)}
+                disabled={deletingActivityId === activity.id}
+                onClick={() => onDelete(activity)}
                 type="button"
               >
-                {deletingDealId === deal.id ? "Deleting..." : "Delete"}
+                {deletingActivityId === activity.id ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>
@@ -102,4 +104,4 @@ function DealList({ deals, deletingDealId, emptyMessage, onDelete, onEdit }) {
   );
 }
 
-export default DealList;
+export default ActivityList;

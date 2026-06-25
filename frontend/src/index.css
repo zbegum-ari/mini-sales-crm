@@ -1,13 +1,30 @@
 @import "tailwindcss";
 
+:root {
+  --crm-primary: #2563eb;
+  --crm-primary-hover: #1d4ed8;
+  --crm-accent: #0f766e;
+  --crm-accent-soft: #ccfbf1;
+  --crm-accent-cyan: #06b6d4;
+  --crm-background: #fafaf9;
+  --crm-card: #ffffff;
+  --crm-text: #0f172a;
+  --crm-muted: #64748b;
+  --crm-border: #e7e5e4;
+  --crm-success: #10b981;
+  --crm-warning: #f59e0b;
+  --crm-danger: #e11d48;
+}
+
 html {
-  background-color: #f1f5f9;
+  background-color: var(--crm-background);
+  color-scheme: light;
 }
 
 body {
   margin: 0;
-  background-color: #f1f5f9;
-  color: #0f172a;
+  background-color: var(--crm-background);
+  color: var(--crm-text);
   font-family:
     "Inter",
     ui-sans-serif,
@@ -16,6 +33,8 @@ body {
     BlinkMacSystemFont,
     "Segoe UI",
     sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 * {
@@ -24,4 +43,154 @@ body {
 
 #root {
   min-height: 100vh;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.crm-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.crm-control {
+  min-height: 44px;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.crm-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1rem;
+  border: 1px solid transparent;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  cursor: pointer;
+}
+
+.crm-button:focus-visible,
+.crm-select:focus-visible {
+  outline: none;
+}
+
+.crm-button-primary {
+  background-color: var(--crm-primary);
+  border-color: var(--crm-primary);
+  color: #ffffff;
+}
+
+.crm-button-primary:hover {
+  background-color: var(--crm-primary-hover);
+  border-color: var(--crm-primary-hover);
+}
+
+.crm-button-primary:focus-visible {
+  box-shadow:
+    0 0 0 4px rgba(191, 219, 254, 0.55),
+    0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.crm-button-secondary {
+  background-color: #ffffff;
+  border-color: var(--crm-border);
+  color: #334155;
+}
+
+.crm-button-secondary:hover {
+  background-color: #fafaf9;
+  border-color: #d6d3d1;
+}
+
+.crm-button-secondary:focus-visible {
+  box-shadow:
+    0 0 0 4px rgba(226, 232, 240, 0.55),
+    0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.crm-button-danger {
+  background-color: var(--crm-danger);
+  border-color: var(--crm-danger);
+  color: #ffffff;
+}
+
+.crm-button-danger:hover {
+  background-color: #be123c;
+  border-color: #be123c;
+}
+
+.crm-button-danger:focus-visible {
+  box-shadow:
+    0 0 0 4px rgba(254, 205, 211, 0.65),
+    0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.crm-button-success {
+  background-color: var(--crm-success);
+  border-color: var(--crm-success);
+  color: #ffffff;
+}
+
+.crm-button-success:hover {
+  background-color: #059669;
+  border-color: #059669;
+}
+
+.crm-button-success:focus-visible {
+  box-shadow:
+    0 0 0 4px rgba(167, 243, 208, 0.65),
+    0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.crm-button-toggle-active {
+  background-color: #f0fdfa;
+  border-color: #99f6e4;
+  color: #0f766e;
+}
+
+.crm-button-toggle-active:hover {
+  background-color: #ccfbf1;
+}
+
+.crm-select {
+  appearance: none;
+  border: 1px solid var(--crm-border);
+  background-color: #ffffff;
+  color: #334155;
+  font-weight: 500;
+  padding: 0 2.5rem 0 1rem;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  background-image:
+    linear-gradient(45deg, transparent 50%, #64748b 50%),
+    linear-gradient(135deg, #64748b 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) calc(50% - 2px),
+    calc(100% - 13px) calc(50% - 2px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+
+.crm-select:hover {
+  border-color: #a8a29e;
+}
+
+.crm-select:focus-visible {
+  border-color: var(--crm-accent);
+  box-shadow:
+    0 0 0 4px rgba(153, 246, 228, 0.45),
+    0 1px 2px rgba(15, 23, 42, 0.04);
 }

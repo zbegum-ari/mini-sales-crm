@@ -133,3 +133,89 @@ export function deleteDeal(dealId) {
     method: "DELETE",
   });
 }
+
+export function getActivities(filters = {}) {
+  const searchParams = new URLSearchParams();
+
+  if (filters.companyId) {
+    searchParams.set("company_id", filters.companyId);
+  }
+
+  if (filters.dealId) {
+    searchParams.set("deal_id", filters.dealId);
+  }
+
+  if (filters.activityType) {
+    searchParams.set("activity_type", filters.activityType);
+  }
+
+  const queryString = searchParams.toString();
+  const path = queryString ? `/activities?${queryString}` : "/activities";
+
+  return request(path);
+}
+
+export function createActivity(activityData) {
+  return request("/activities", {
+    method: "POST",
+    body: JSON.stringify(activityData),
+  });
+}
+
+export function updateActivity(activityId, activityData) {
+  return request(`/activities/${activityId}`, {
+    method: "PUT",
+    body: JSON.stringify(activityData),
+  });
+}
+
+export function deleteActivity(activityId) {
+  return request(`/activities/${activityId}`, {
+    method: "DELETE",
+  });
+}
+
+export function getTasks(filters = {}) {
+  const searchParams = new URLSearchParams();
+
+  if (filters.companyId) {
+    searchParams.set("company_id", filters.companyId);
+  }
+
+  if (filters.dealId) {
+    searchParams.set("deal_id", filters.dealId);
+  }
+
+  if (filters.status) {
+    searchParams.set("status", filters.status);
+  }
+
+  if (filters.overdue) {
+    searchParams.set("overdue", "true");
+  }
+
+  const queryString = searchParams.toString();
+  const path = queryString ? `/tasks?${queryString}` : "/tasks";
+
+  return request(path);
+}
+
+export function createTask(taskData) {
+  return request("/tasks", {
+    method: "POST",
+    body: JSON.stringify(taskData),
+  });
+}
+
+export function updateTask(taskId, taskData) {
+  return request(`/tasks/${taskId}`, {
+    method: "PUT",
+    body: JSON.stringify(taskData),
+  });
+}
+
+export function deleteTask(taskId) {
+  return request(`/tasks/${taskId}`, {
+    method: "DELETE",
+  });
+}

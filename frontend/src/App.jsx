@@ -1,37 +1,255 @@
 import { useEffect, useState } from "react";
 
+import ActivityForm from "./components/ActivityForm";
+import ActivityList from "./components/ActivityList";
 import CompanyForm from "./components/CompanyForm";
 import CompanyList from "./components/CompanyList";
 import ContactForm from "./components/ContactForm";
 import ContactList from "./components/ContactList";
 import DealForm from "./components/DealForm";
 import DealList from "./components/DealList";
+import TaskForm from "./components/TaskForm";
+import TaskList from "./components/TaskList";
 import {
   checkHealth,
+  createActivity,
   createCompany,
   createContact,
   createDeal,
+  createTask,
+  deleteActivity,
   deleteCompany,
   deleteContact,
   deleteDeal,
+  deleteTask,
+  getActivities,
   getDeals,
   getCompanies,
   getContacts,
+  getTasks,
+  updateActivity,
   updateCompany,
   updateContact,
   updateDeal,
+  updateTask,
 } from "./services/api";
 
+const statusOptions = ["All", "Lead", "Active", "Inactive", "Customer", "Lost"];
+const dealStageOptions = ["All", "Lead", "Qualified", "Proposal", "Negotiation", "Won", "Lost"];
+const activityTypeOptions = ["All", "Note", "Call", "Meeting", "Email", "Follow-up"];
+const taskStatusOptions = ["All", "Open", "Completed", "Cancelled"];
+const allCompaniesValue = "all";
+const sections = [
+  { id: "companies", label: "Companies" },
+  { id: "contacts", label: "Contacts" },
+  { id: "deals", label: "Deals" },
+  { id: "activities", label: "Activities" },
+  { id: "tasks", label: "Tasks" },
+  { id: "dashboard", label: "Dashboard" },
+];
+const sectionMeta = {
+  companies: {
+    title: "Companies",
+    description: "Manage organization records and core account details.",
+  },
+  contacts: {
+    title: "Contacts",
+    description: "Keep key people linked to the right companies.",
+  },
+  deals: {
+    title: "Deals",
+    description: "Track active revenue opportunities across the pipeline.",
+  },
+  activities: {
+    title: "Activities",
+    description: "Log notes, calls, meetings, and follow-ups in the timeline.",
+  },
+  tasks: {
+    title: "Tasks",
+    description: "Manage follow-up work, due dates, and completion status.",
+  },
+  dashboard: {
+    title: "Dashboard",
+    description: "Overview panels will be added in Milestone 6.",
+  },
+};
+
+function getStatusBadge(isConnected, status) {
+  if (isConnected) {
+    return {
+      className: "border-emerald-200 bg-emerald-50 text-emerald-700",
+      dotClassName: "bg-emerald-500",
+      label: "Backend connected",
+    };
+  }
+
+  if (status === "Checking backend...") {
+    return {
+      className: "border-amber-200 bg-amber-50 text-amber-700",
+      dotClassName: "bg-amber-500",
+      label: "Checking backend",
+    };
+  }
+
+  return {
+    className: "border-rose-200 bg-rose-50 text-rose-700",
+    dotClassName: "bg-rose-500",
+    label: "Backend disconnected",
+  };
+}
+
+function AppShellHeader({ activeSection, isConnected, sections, status, onSectionChange }) {
+  const activeMeta = sectionMeta[activeSection];
+  const badge = getStatusBadge(isConnected, status);
+
+  return (
+    <section className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
+      <div className="h-1 w-full bg-gradient-to-r from-teal-600 via-cyan-500 to-sky-400" />
+      <div className="border-b border-stone-200 px-6 py-5 sm:px-7">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="space-y-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">
+                Mini Sales CRM
+              </p>
+              <h1 className="mt-1 text-2xl font-semibold text-slate-950">
+                Mini Sales CRM
+              </h1>
+              <p className="mt-1 text-sm text-slate-500">Internal sales workspace</p>
+            </div>
+
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">
+                Current section
+              </p>
+              <h2 className="mt-1 text-lg font-semibold text-slate-900">
+                {activeMeta.title}
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">{activeMeta.description}</p>
+            </div>
+          </div>
+
+          <div
+            className={`inline-flex items-center gap-2 self-start rounded-full border px-3.5 py-2 text-sm font-medium ${badge.className}`}
+          >
+            <span className={`h-2.5 w-2.5 rounded-full ${badge.dotClassName}`} />
+            {badge.label}
+          </div>
+        </div>
+      </div>
+
+      <nav className="flex flex-wrap gap-2 bg-stone-50/70 px-6 py-4 sm:px-7" aria-label="Primary">
+        {sections.map((section) => (
+          <button
+            key={section.id}
+            className={`rounded-xl border px-3.5 py-2 text-sm font-medium transition focus:outline-none focus:ring-4 ${
+              activeSection === section.id
+                ? "border-teal-200 bg-teal-50 text-teal-700 shadow-sm focus:ring-teal-100"
+                : "border-stone-200 bg-white text-slate-600 hover:border-stone-300 hover:bg-stone-50 focus:ring-stone-100"
+            }`}
+            onClick={() => onSectionChange(section.id)}
+            type="button"
+          >
+            {section.label}
+          </button>
+        ))}
+      </nav>
+    </section>
+  );
+}
+
+function ModuleSection({
+  actionLabel,
+  description,
+  controls,
+  formContent,
+  formError,
+  formTitle,
+  isFormOpen,
+  listContent,
+  listError,
+  onCloseForm,
+  onPrimaryAction,
+  onRefresh,
+  title,
+}) {
+  return (
+    <section className="space-y-5">
+      <div className="rounded-3xl border border-stone-200 bg-white px-5 py-5 shadow-sm sm:px-6">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+          <div className="max-w-2xl">
+            <h3 className="text-xl font-semibold text-slate-900">{title}</h3>
+            <p className="mt-1.5 text-sm text-slate-500">{description}</p>
+          </div>
+
+          <div className="flex w-full xl:w-auto xl:justify-end">
+            <div className="crm-action-row xl:justify-end">
+              {controls}
+              {onRefresh ? (
+                <button
+                  className="crm-control crm-button crm-button-secondary"
+                  onClick={onRefresh}
+                  type="button"
+                >
+                  Refresh
+                </button>
+              ) : null}
+
+              <button
+                className="crm-control crm-button crm-button-primary"
+                onClick={onPrimaryAction}
+                type="button"
+              >
+                {actionLabel}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {isFormOpen ? (
+        <div className="rounded-3xl border border-stone-200 bg-white px-5 py-5 shadow-sm sm:px-6">
+          <div className="flex flex-col gap-3 border-b border-stone-200 pb-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h4 className="text-lg font-semibold text-slate-900">{formTitle}</h4>
+              <p className="mt-1 text-sm text-slate-500">
+                Fields marked with * are required.
+              </p>
+            </div>
+
+            <button
+              className="rounded-xl border border-stone-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-stone-50 focus:outline-none focus:ring-4 focus:ring-stone-100"
+              onClick={onCloseForm}
+              type="button"
+            >
+              Close
+            </button>
+          </div>
+
+          {formError ? (
+            <div className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              {formError}
+            </div>
+          ) : null}
+
+          <div className="mt-5">{formContent}</div>
+        </div>
+      ) : null}
+
+      <div className="rounded-3xl border border-stone-200 bg-white px-5 py-5 shadow-sm sm:px-6">
+        {listError ? (
+          <div className="mb-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {listError}
+          </div>
+        ) : null}
+
+        {listContent}
+      </div>
+    </section>
+  );
+}
+
 function App() {
-  const statusOptions = ["All", "Lead", "Active", "Inactive", "Customer", "Lost"];
-  const dealStageOptions = ["All", "Lead", "Qualified", "Proposal", "Negotiation", "Won", "Lost"];
-  const allCompaniesValue = "all";
-  const sections = [
-    { id: "companies", label: "Companies" },
-    { id: "contacts", label: "Contacts" },
-    { id: "deals", label: "Deals" },
-    { id: "dashboard", label: "Dashboard" },
-  ];
   const [status, setStatus] = useState("Checking backend...");
   const [isConnected, setIsConnected] = useState(false);
   const [activeSection, setActiveSection] = useState("companies");
@@ -42,6 +260,7 @@ function App() {
   const [isSubmittingCompany, setIsSubmittingCompany] = useState(false);
   const [deletingCompanyId, setDeletingCompanyId] = useState(null);
   const [editingCompany, setEditingCompany] = useState(null);
+  const [isCompanyFormOpen, setIsCompanyFormOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState("All");
   const [contacts, setContacts] = useState([]);
   const [isLoadingContacts, setIsLoadingContacts] = useState(true);
@@ -50,15 +269,40 @@ function App() {
   const [isSubmittingContact, setIsSubmittingContact] = useState(false);
   const [deletingContactId, setDeletingContactId] = useState(null);
   const [editingContact, setEditingContact] = useState(null);
+  const [isContactFormOpen, setIsContactFormOpen] = useState(false);
   const [selectedContactCompany, setSelectedContactCompany] = useState(allCompaniesValue);
   const [deals, setDeals] = useState([]);
+  const [allDeals, setAllDeals] = useState([]);
   const [isLoadingDeals, setIsLoadingDeals] = useState(true);
   const [dealsError, setDealsError] = useState("");
   const [dealFormError, setDealFormError] = useState("");
   const [isSubmittingDeal, setIsSubmittingDeal] = useState(false);
   const [deletingDealId, setDeletingDealId] = useState(null);
   const [editingDeal, setEditingDeal] = useState(null);
+  const [isDealFormOpen, setIsDealFormOpen] = useState(false);
   const [selectedDealStage, setSelectedDealStage] = useState("All");
+  const [activities, setActivities] = useState([]);
+  const [isLoadingActivities, setIsLoadingActivities] = useState(true);
+  const [activitiesError, setActivitiesError] = useState("");
+  const [activityFormError, setActivityFormError] = useState("");
+  const [isSubmittingActivity, setIsSubmittingActivity] = useState(false);
+  const [deletingActivityId, setDeletingActivityId] = useState(null);
+  const [editingActivity, setEditingActivity] = useState(null);
+  const [isActivityFormOpen, setIsActivityFormOpen] = useState(false);
+  const [selectedActivityCompany, setSelectedActivityCompany] = useState(allCompaniesValue);
+  const [selectedActivityType, setSelectedActivityType] = useState("All");
+  const [tasks, setTasks] = useState([]);
+  const [isLoadingTasks, setIsLoadingTasks] = useState(true);
+  const [tasksError, setTasksError] = useState("");
+  const [taskFormError, setTaskFormError] = useState("");
+  const [isSubmittingTask, setIsSubmittingTask] = useState(false);
+  const [deletingTaskId, setDeletingTaskId] = useState(null);
+  const [completingTaskId, setCompletingTaskId] = useState(null);
+  const [editingTask, setEditingTask] = useState(null);
+  const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
+  const [selectedTaskCompany, setSelectedTaskCompany] = useState(allCompaniesValue);
+  const [selectedTaskStatus, setSelectedTaskStatus] = useState("All");
+  const [showOverdueTasksOnly, setShowOverdueTasksOnly] = useState(false);
 
   useEffect(() => {
     async function checkBackend() {
@@ -66,7 +310,7 @@ function App() {
         const data = await checkHealth();
 
         if (data.status === "ok") {
-          setStatus("Backend is connected");
+          setStatus("Backend connected");
           setIsConnected(true);
           return;
         }
@@ -82,6 +326,7 @@ function App() {
 
   useEffect(() => {
     loadCompanies();
+    loadAllDeals();
   }, []);
 
   useEffect(() => {
@@ -91,6 +336,14 @@ function App() {
   useEffect(() => {
     loadDeals(selectedDealStage);
   }, [selectedDealStage]);
+
+  useEffect(() => {
+    loadActivities(selectedActivityCompany, selectedActivityType);
+  }, [selectedActivityCompany, selectedActivityType]);
+
+  useEffect(() => {
+    loadTasks(selectedTaskCompany, selectedTaskStatus, showOverdueTasksOnly);
+  }, [selectedTaskCompany, selectedTaskStatus, showOverdueTasksOnly]);
 
   async function loadCompanies() {
     setIsLoadingCompanies(true);
@@ -137,15 +390,129 @@ function App() {
     }
   }
 
+  async function loadAllDeals() {
+    try {
+      const data = await getDeals();
+      setAllDeals(data);
+    } catch {
+      setAllDeals([]);
+    }
+  }
+
+  async function loadActivities(
+    companyFilter = selectedActivityCompany,
+    typeFilter = selectedActivityType,
+  ) {
+    setIsLoadingActivities(true);
+    setActivitiesError("");
+
+    try {
+      const companyId =
+        companyFilter === allCompaniesValue ? undefined : Number(companyFilter);
+      const activityType = typeFilter === "All" ? undefined : typeFilter;
+      const data = await getActivities({ companyId, activityType });
+      setActivities(data);
+    } catch (error) {
+      setActivitiesError(error.message || "Could not load activities");
+    } finally {
+      setIsLoadingActivities(false);
+    }
+  }
+
+  async function loadTasks(
+    companyFilter = selectedTaskCompany,
+    statusFilter = selectedTaskStatus,
+    overdueOnly = showOverdueTasksOnly,
+  ) {
+    setIsLoadingTasks(true);
+    setTasksError("");
+
+    try {
+      const companyId =
+        companyFilter === allCompaniesValue ? undefined : Number(companyFilter);
+      const status = statusFilter === "All" ? undefined : statusFilter;
+      const data = await getTasks({ companyId, status, overdue: overdueOnly });
+      setTasks(data);
+    } catch (error) {
+      setTasksError(error.message || "Could not load tasks");
+    } finally {
+      setIsLoadingTasks(false);
+    }
+  }
+
+  function openCompanyCreateForm() {
+    setEditingCompany(null);
+    setCompanyFormError("");
+    setIsCompanyFormOpen(true);
+  }
+
+  function closeCompanyForm() {
+    setEditingCompany(null);
+    setCompanyFormError("");
+    setIsCompanyFormOpen(false);
+  }
+
+  function openContactCreateForm() {
+    setEditingContact(null);
+    setContactFormError("");
+    setIsContactFormOpen(true);
+  }
+
+  function closeContactForm() {
+    setEditingContact(null);
+    setContactFormError("");
+    setIsContactFormOpen(false);
+  }
+
+  function openDealCreateForm() {
+    setEditingDeal(null);
+    setDealFormError("");
+    setIsDealFormOpen(true);
+  }
+
+  function closeDealForm() {
+    setEditingDeal(null);
+    setDealFormError("");
+    setIsDealFormOpen(false);
+  }
+
+  function openActivityCreateForm() {
+    setEditingActivity(null);
+    setActivityFormError("");
+    setIsActivityFormOpen(true);
+  }
+
+  function closeActivityForm() {
+    setEditingActivity(null);
+    setActivityFormError("");
+    setIsActivityFormOpen(false);
+  }
+
+  function openTaskCreateForm() {
+    setEditingTask(null);
+    setTaskFormError("");
+    setIsTaskFormOpen(true);
+  }
+
+  function closeTaskForm() {
+    setEditingTask(null);
+    setTaskFormError("");
+    setIsTaskFormOpen(false);
+  }
+
   async function handleCreateCompany(companyData) {
     setIsSubmittingCompany(true);
     setCompanyFormError("");
 
     try {
       await createCompany(companyData);
+      closeCompanyForm();
       await loadCompanies();
       await loadContacts(selectedContactCompany);
       await loadDeals(selectedDealStage);
+      await loadAllDeals();
+      await loadActivities(selectedActivityCompany, selectedActivityType);
+      await loadTasks(selectedTaskCompany, selectedTaskStatus, showOverdueTasksOnly);
       return true;
     } catch (error) {
       setCompanyFormError(error.message || "Could not create company");
@@ -157,7 +524,7 @@ function App() {
 
   async function handleUpdateCompany(companyData) {
     if (!editingCompany) {
-      return;
+      return false;
     }
 
     setIsSubmittingCompany(true);
@@ -165,10 +532,13 @@ function App() {
 
     try {
       await updateCompany(editingCompany.id, companyData);
-      setEditingCompany(null);
+      closeCompanyForm();
       await loadCompanies();
       await loadContacts(selectedContactCompany);
       await loadDeals(selectedDealStage);
+      await loadAllDeals();
+      await loadActivities(selectedActivityCompany, selectedActivityType);
+      await loadTasks(selectedTaskCompany, selectedTaskStatus, showOverdueTasksOnly);
       return true;
     } catch (error) {
       setCompanyFormError(error.message || "Could not update company");
@@ -191,24 +561,47 @@ function App() {
       selectedContactCompany === String(company.id)
         ? allCompaniesValue
         : selectedContactCompany;
+    const nextActivityCompanyFilter =
+      selectedActivityCompany === String(company.id)
+        ? allCompaniesValue
+        : selectedActivityCompany;
+    const nextTaskCompanyFilter =
+      selectedTaskCompany === String(company.id)
+        ? allCompaniesValue
+        : selectedTaskCompany;
 
     try {
       await deleteCompany(company.id);
       if (editingCompany?.id === company.id) {
-        setEditingCompany(null);
+        closeCompanyForm();
       }
       if (editingContact?.company_id === company.id) {
-        setEditingContact(null);
+        closeContactForm();
       }
       if (editingDeal?.company_id === company.id) {
-        setEditingDeal(null);
+        closeDealForm();
+      }
+      if (editingActivity?.company_id === company.id) {
+        closeActivityForm();
+      }
+      if (editingTask?.company_id === company.id) {
+        closeTaskForm();
       }
       if (selectedContactCompany === String(company.id)) {
         setSelectedContactCompany(allCompaniesValue);
       }
+      if (selectedActivityCompany === String(company.id)) {
+        setSelectedActivityCompany(allCompaniesValue);
+      }
+      if (selectedTaskCompany === String(company.id)) {
+        setSelectedTaskCompany(allCompaniesValue);
+      }
       await loadCompanies();
       await loadContacts(nextContactCompanyFilter);
       await loadDeals(selectedDealStage);
+      await loadAllDeals();
+      await loadActivities(nextActivityCompanyFilter, selectedActivityType);
+      await loadTasks(nextTaskCompanyFilter, selectedTaskStatus, showOverdueTasksOnly);
     } catch (error) {
       setCompaniesError(error.message || "Could not delete company");
     } finally {
@@ -222,6 +615,7 @@ function App() {
 
     try {
       await createContact(contactData);
+      closeContactForm();
       await loadContacts(selectedContactCompany);
       return true;
     } catch (error) {
@@ -242,7 +636,7 @@ function App() {
 
     try {
       await updateContact(editingContact.id, contactData);
-      setEditingContact(null);
+      closeContactForm();
       await loadContacts(selectedContactCompany);
       return true;
     } catch (error) {
@@ -255,7 +649,7 @@ function App() {
 
   async function handleDeleteContact(contact) {
     const confirmed = window.confirm(
-      `Delete ${contact.first_name} ${contact.last_name}?`
+      `Delete ${contact.first_name} ${contact.last_name}?`,
     );
 
     if (!confirmed) {
@@ -268,7 +662,7 @@ function App() {
     try {
       await deleteContact(contact.id);
       if (editingContact?.id === contact.id) {
-        setEditingContact(null);
+        closeContactForm();
       }
       await loadContacts(selectedContactCompany);
     } catch (error) {
@@ -284,7 +678,11 @@ function App() {
 
     try {
       await createDeal(dealData);
+      closeDealForm();
       await loadDeals(selectedDealStage);
+      await loadAllDeals();
+      await loadActivities(selectedActivityCompany, selectedActivityType);
+      await loadTasks(selectedTaskCompany, selectedTaskStatus, showOverdueTasksOnly);
       return true;
     } catch (error) {
       setDealFormError(error.message || "Could not create deal");
@@ -304,8 +702,11 @@ function App() {
 
     try {
       await updateDeal(editingDeal.id, dealData);
-      setEditingDeal(null);
+      closeDealForm();
       await loadDeals(selectedDealStage);
+      await loadAllDeals();
+      await loadActivities(selectedActivityCompany, selectedActivityType);
+      await loadTasks(selectedTaskCompany, selectedTaskStatus, showOverdueTasksOnly);
       return true;
     } catch (error) {
       setDealFormError(error.message || "Could not update deal");
@@ -328,9 +729,18 @@ function App() {
     try {
       await deleteDeal(deal.id);
       if (editingDeal?.id === deal.id) {
-        setEditingDeal(null);
+        closeDealForm();
+      }
+      if (editingActivity?.deal_id === deal.id) {
+        closeActivityForm();
+      }
+      if (editingTask?.deal_id === deal.id) {
+        closeTaskForm();
       }
       await loadDeals(selectedDealStage);
+      await loadAllDeals();
+      await loadActivities(selectedActivityCompany, selectedActivityType);
+      await loadTasks(selectedTaskCompany, selectedTaskStatus, showOverdueTasksOnly);
     } catch (error) {
       setDealsError(error.message || "Could not delete deal");
     } finally {
@@ -338,378 +748,575 @@ function App() {
     }
   }
 
+  async function handleCreateActivity(activityData) {
+    setIsSubmittingActivity(true);
+    setActivityFormError("");
+
+    try {
+      await createActivity(activityData);
+      closeActivityForm();
+      await loadActivities(selectedActivityCompany, selectedActivityType);
+      return true;
+    } catch (error) {
+      setActivityFormError(error.message || "Could not create activity");
+      return false;
+    } finally {
+      setIsSubmittingActivity(false);
+    }
+  }
+
+  async function handleUpdateActivity(activityData) {
+    if (!editingActivity) {
+      return false;
+    }
+
+    setIsSubmittingActivity(true);
+    setActivityFormError("");
+
+    try {
+      await updateActivity(editingActivity.id, activityData);
+      closeActivityForm();
+      await loadActivities(selectedActivityCompany, selectedActivityType);
+      return true;
+    } catch (error) {
+      setActivityFormError(error.message || "Could not update activity");
+      return false;
+    } finally {
+      setIsSubmittingActivity(false);
+    }
+  }
+
+  async function handleDeleteActivity(activity) {
+    const confirmed = window.confirm("Delete this activity?");
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingActivityId(activity.id);
+    setActivitiesError("");
+
+    try {
+      await deleteActivity(activity.id);
+      if (editingActivity?.id === activity.id) {
+        closeActivityForm();
+      }
+      await loadActivities(selectedActivityCompany, selectedActivityType);
+    } catch (error) {
+      setActivitiesError(error.message || "Could not delete activity");
+    } finally {
+      setDeletingActivityId(null);
+    }
+  }
+
+  async function handleCreateTask(taskData) {
+    setIsSubmittingTask(true);
+    setTaskFormError("");
+
+    try {
+      await createTask(taskData);
+      closeTaskForm();
+      await loadTasks(selectedTaskCompany, selectedTaskStatus, showOverdueTasksOnly);
+      return true;
+    } catch (error) {
+      setTaskFormError(error.message || "Could not create task");
+      return false;
+    } finally {
+      setIsSubmittingTask(false);
+    }
+  }
+
+  async function handleUpdateTask(taskData) {
+    if (!editingTask) {
+      return false;
+    }
+
+    setIsSubmittingTask(true);
+    setTaskFormError("");
+
+    try {
+      await updateTask(editingTask.id, taskData);
+      closeTaskForm();
+      await loadTasks(selectedTaskCompany, selectedTaskStatus, showOverdueTasksOnly);
+      return true;
+    } catch (error) {
+      setTaskFormError(error.message || "Could not update task");
+      return false;
+    } finally {
+      setIsSubmittingTask(false);
+    }
+  }
+
+  async function handleCompleteTask(task) {
+    setCompletingTaskId(task.id);
+    setTasksError("");
+
+    try {
+      await updateTask(task.id, {
+        company_id: task.company_id,
+        deal_id: task.deal_id,
+        title: task.title,
+        description: task.description,
+        due_date: task.due_date,
+        status: "Completed",
+      });
+
+      if (editingTask?.id === task.id) {
+        setEditingTask((current) =>
+          current
+            ? {
+                ...current,
+                status: "Completed",
+              }
+            : null,
+        );
+      }
+
+      await loadTasks(selectedTaskCompany, selectedTaskStatus, showOverdueTasksOnly);
+    } catch (error) {
+      setTasksError(error.message || "Could not update task");
+    } finally {
+      setCompletingTaskId(null);
+    }
+  }
+
+  async function handleDeleteTask(task) {
+    const confirmed = window.confirm(`Delete ${task.title}?`);
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingTaskId(task.id);
+    setTasksError("");
+
+    try {
+      await deleteTask(task.id);
+      if (editingTask?.id === task.id) {
+        closeTaskForm();
+      }
+      await loadTasks(selectedTaskCompany, selectedTaskStatus, showOverdueTasksOnly);
+    } catch (error) {
+      setTasksError(error.message || "Could not delete task");
+    } finally {
+      setDeletingTaskId(null);
+    }
+  }
+
+  function handleEditCompany(company) {
+    setEditingCompany(company);
+    setCompanyFormError("");
+    setIsCompanyFormOpen(true);
+  }
+
+  function handleEditContact(contact) {
+    setEditingContact(contact);
+    setContactFormError("");
+    setIsContactFormOpen(true);
+  }
+
+  function handleEditDeal(deal) {
+    setEditingDeal(deal);
+    setDealFormError("");
+    setIsDealFormOpen(true);
+  }
+
+  function handleEditActivity(activity) {
+    setEditingActivity(activity);
+    setActivityFormError("");
+    setIsActivityFormOpen(true);
+  }
+
+  function handleEditTask(task) {
+    setEditingTask(task);
+    setTaskFormError("");
+    setIsTaskFormOpen(true);
+  }
+
   const filteredCompanies =
     selectedStatus === "All"
       ? companies
       : companies.filter((company) => company.status === selectedStatus);
 
-  const emptyMessage =
+  const companiesEmptyMessage =
     selectedStatus === "All"
-      ? "No companies yet. Add your first company using the form."
+      ? "No companies yet. Add your first company."
       : `No companies found with status "${selectedStatus}".`;
 
   const contactsEmptyMessage =
     selectedContactCompany === allCompaniesValue
-      ? "No contacts yet. Add your first contact using the form."
+      ? "No contacts yet. Add your first contact."
       : "No contacts found for the selected company.";
 
   const dealsEmptyMessage =
     selectedDealStage === "All"
-      ? "No deals yet. Add your first deal using the form."
+      ? "No deals yet. Add your first deal."
       : `No deals found in the "${selectedDealStage}" stage.`;
 
+  const activitiesEmptyMessage =
+    selectedActivityCompany === allCompaniesValue && selectedActivityType === "All"
+      ? "No activities yet. Add your first activity."
+      : "No activities found for the selected filters.";
+
+  const tasksEmptyMessage =
+    showOverdueTasksOnly
+      ? "No overdue open tasks found for the selected filters."
+      : selectedTaskCompany === allCompaniesValue && selectedTaskStatus === "All"
+        ? "No tasks yet. Add your first task."
+        : "No tasks found for the selected filters.";
+
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-6xl space-y-8">
-        <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-200 bg-gradient-to-r from-indigo-600 to-blue-600 px-8 py-6 text-white">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-indigo-100">
-              Mini Sales CRM v1
-            </p>
-            <h1 className="mt-2 text-3xl font-bold">Milestone 4: Deals</h1>
-            <p className="mt-2 max-w-2xl text-sm text-indigo-50">
-              This page keeps the backend health check and organizes the CRM
-              into simple working sections with companies, contacts, and deals.
-            </p>
-          </div>
-
-          <div className="space-y-6 px-8 py-6">
-            <div
-              className={`rounded-2xl border px-4 py-4 text-sm ${
-                isConnected
-                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                  : "border-rose-200 bg-rose-50 text-rose-700"
-              }`}
-            >
-              <span className="inline-flex items-center gap-2 font-semibold">
-                <span
-                  className={`h-2.5 w-2.5 rounded-full ${
-                    isConnected ? "bg-emerald-500" : "bg-rose-500"
-                  }`}
-                />
-                Connection status:
-              </span>{" "}
-              {status}
-            </div>
-
-            <nav className="flex flex-wrap gap-3" aria-label="Primary">
-              {sections.map((section) => (
-                <button
-                  key={section.id}
-                  className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-4 ${
-                    activeSection === section.id
-                      ? "bg-indigo-600 text-white shadow-sm focus:ring-indigo-100"
-                      : "border border-slate-300 bg-white text-slate-700 shadow-sm hover:bg-slate-50 focus:ring-slate-100"
-                  }`}
-                  onClick={() => setActiveSection(section.id)}
-                  type="button"
-                >
-                  {section.label}
-                </button>
-              ))}
-            </nav>
-          </div>
-        </section>
+    <main className="min-h-screen bg-stone-50 px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-7xl flex-col gap-6">
+        <AppShellHeader
+          activeSection={activeSection}
+          isConnected={isConnected}
+          sections={sections}
+          status={status}
+          onSectionChange={setActiveSection}
+        />
 
         {activeSection === "companies" ? (
-          <section className="grid gap-8 lg:grid-cols-[1fr_1.2fr]">
-            <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-              <div className="border-b border-slate-200 pb-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-600">
-                  Company Form
-                </p>
-                <h2 className="mt-2 text-2xl font-bold text-slate-900">
-                  {editingCompany ? "Edit company" : "Add company"}
-                </h2>
-                <p className="mt-2 text-slate-600">
-                  Fill in the company details below. Fields marked with * are
-                  required.
-                </p>
-              </div>
-
-              {companyFormError ? (
-                <div className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                  {companyFormError}
+          <ModuleSection
+            actionLabel="Add company"
+            description="View and manage account records, company details, and notes."
+            controls={
+              <select
+                className="crm-control crm-select w-40 sm:w-44"
+                onChange={(event) => setSelectedStatus(event.target.value)}
+                value={selectedStatus}
+              >
+                {statusOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option === "All" ? "All statuses" : option}
+                  </option>
+                ))}
+              </select>
+            }
+            formContent={
+              <CompanyForm
+                initialValues={editingCompany}
+                isSubmitting={isSubmittingCompany}
+                onCancel={closeCompanyForm}
+                onSubmit={editingCompany ? handleUpdateCompany : handleCreateCompany}
+                submitLabel={editingCompany ? "Update company" : "Add company"}
+              />
+            }
+            formError={companyFormError}
+            formTitle={editingCompany ? "Edit company" : "Add company"}
+            isFormOpen={isCompanyFormOpen}
+            listContent={
+              isLoadingCompanies ? (
+                <div className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-8 text-sm text-slate-600">
+                  Loading companies...
                 </div>
-              ) : null}
-
-              <div className="mt-6">
-                <CompanyForm
-                  initialValues={editingCompany}
-                  isSubmitting={isSubmittingCompany}
-                  onCancel={editingCompany ? () => setEditingCompany(null) : null}
-                  onSubmit={editingCompany ? handleUpdateCompany : handleCreateCompany}
-                  submitLabel={editingCompany ? "Update company" : "Add company"}
+              ) : (
+                <CompanyList
+                  companies={filteredCompanies}
+                  deletingCompanyId={deletingCompanyId}
+                  emptyMessage={companiesEmptyMessage}
+                  onDelete={handleDeleteCompany}
+                  onEdit={handleEditCompany}
                 />
-              </div>
-            </div>
-
-            <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-              <div className="flex flex-col gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-600">
-                    Company List
-                  </p>
-                  <h2 className="mt-2 text-2xl font-bold text-slate-900">Companies</h2>
-                  <p className="mt-2 text-slate-600">
-                    View, edit, and delete companies from your first CRM resource.
-                  </p>
-                </div>
-
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <select
-                    className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
-                    onChange={(event) => setSelectedStatus(event.target.value)}
-                    value={selectedStatus}
-                  >
-                    {statusOptions.map((option) => (
-                      <option key={option} value={option}>
-                        {option === "All" ? "All statuses" : option}
-                      </option>
-                    ))}
-                  </select>
-
-                  <button
-                    className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-100"
-                    onClick={loadCompanies}
-                    type="button"
-                  >
-                    Refresh list
-                  </button>
-                </div>
-              </div>
-
-              {companiesError ? (
-                <div className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                  {companiesError}
-                </div>
-              ) : null}
-
-              <div className="mt-6">
-                {isLoadingCompanies ? (
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-8 text-sm text-slate-600">
-                    Loading companies...
-                  </div>
-                ) : (
-                  <CompanyList
-                    companies={filteredCompanies}
-                    deletingCompanyId={deletingCompanyId}
-                    emptyMessage={emptyMessage}
-                    onDelete={handleDeleteCompany}
-                    onEdit={setEditingCompany}
-                  />
-                )}
-              </div>
-            </div>
-          </section>
+              )
+            }
+            listError={companiesError}
+            onCloseForm={closeCompanyForm}
+            onPrimaryAction={openCompanyCreateForm}
+            onRefresh={loadCompanies}
+            title="Companies"
+          />
         ) : null}
 
         {activeSection === "contacts" ? (
-          <section className="grid gap-8 lg:grid-cols-[1fr_1.2fr]">
-            <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-              <div className="border-b border-slate-200 pb-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-600">
-                  Contact Form
-                </p>
-                <h2 className="mt-2 text-2xl font-bold text-slate-900">
-                  {editingContact ? "Edit contact" : "Add contact"}
-                </h2>
-                <p className="mt-2 text-slate-600">
-                  Add people under companies and keep their core details in one place.
-                </p>
-              </div>
-
-              {contactFormError ? (
-                <div className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                  {contactFormError}
+          <ModuleSection
+            actionLabel="Add contact"
+            description="Manage people linked to your companies and keep their details up to date."
+            controls={
+              <select
+                className="crm-control crm-select w-44 sm:w-48"
+                onChange={(event) => setSelectedContactCompany(event.target.value)}
+                value={selectedContactCompany}
+              >
+                <option value={allCompaniesValue}>All companies</option>
+                {companies.map((company) => (
+                  <option key={company.id} value={company.id}>
+                    {company.name}
+                  </option>
+                ))}
+              </select>
+            }
+            formContent={
+              companies.length === 0 ? (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-700">
+                  Create a company before adding contacts.
                 </div>
-              ) : null}
-
-              <div className="mt-6">
-                {companies.length === 0 ? (
-                  <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-700">
-                    Create a company before adding contacts.
-                  </div>
-                ) : (
-                  <ContactForm
-                    companies={companies}
-                    initialValues={editingContact}
-                    isSubmitting={isSubmittingContact}
-                    onCancel={editingContact ? () => setEditingContact(null) : null}
-                    onSubmit={editingContact ? handleUpdateContact : handleCreateContact}
-                    submitLabel={editingContact ? "Update contact" : "Add contact"}
-                  />
-                )}
-              </div>
-            </div>
-
-            <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-              <div className="flex flex-col gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-600">
-                    Contact List
-                  </p>
-                  <h2 className="mt-2 text-2xl font-bold text-slate-900">Contacts</h2>
-                  <p className="mt-2 text-slate-600">
-                    View, edit, and delete contacts linked to your companies.
-                  </p>
+              ) : (
+                <ContactForm
+                  companies={companies}
+                  initialValues={editingContact}
+                  isSubmitting={isSubmittingContact}
+                  onCancel={closeContactForm}
+                  onSubmit={editingContact ? handleUpdateContact : handleCreateContact}
+                  submitLabel={editingContact ? "Update contact" : "Add contact"}
+                />
+              )
+            }
+            formError={contactFormError}
+            formTitle={editingContact ? "Edit contact" : "Add contact"}
+            isFormOpen={isContactFormOpen}
+            listContent={
+              isLoadingContacts ? (
+                <div className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-8 text-sm text-slate-600">
+                  Loading contacts...
                 </div>
-
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <select
-                    className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
-                    onChange={(event) => setSelectedContactCompany(event.target.value)}
-                    value={selectedContactCompany}
-                  >
-                    <option value={allCompaniesValue}>All companies</option>
-                    {companies.map((company) => (
-                      <option key={company.id} value={company.id}>
-                        {company.name}
-                      </option>
-                    ))}
-                  </select>
-
-                  <button
-                    className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-100"
-                    onClick={() => loadContacts(selectedContactCompany)}
-                    type="button"
-                  >
-                    Refresh list
-                  </button>
-                </div>
-              </div>
-
-              {contactsError ? (
-                <div className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                  {contactsError}
-                </div>
-              ) : null}
-
-              <div className="mt-6">
-                {isLoadingContacts ? (
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-8 text-sm text-slate-600">
-                    Loading contacts...
-                  </div>
-                ) : (
-                  <ContactList
-                    contacts={contacts}
-                    deletingContactId={deletingContactId}
-                    emptyMessage={contactsEmptyMessage}
-                    onDelete={handleDeleteContact}
-                    onEdit={setEditingContact}
-                  />
-                )}
-              </div>
-            </div>
-          </section>
+              ) : (
+                <ContactList
+                  contacts={contacts}
+                  deletingContactId={deletingContactId}
+                  emptyMessage={contactsEmptyMessage}
+                  onDelete={handleDeleteContact}
+                  onEdit={handleEditContact}
+                />
+              )
+            }
+            listError={contactsError}
+            onCloseForm={closeContactForm}
+            onPrimaryAction={openContactCreateForm}
+            onRefresh={() => loadContacts(selectedContactCompany)}
+            title="Contacts"
+          />
         ) : null}
 
         {activeSection === "deals" ? (
-          <section className="grid gap-8 lg:grid-cols-[1fr_1.2fr]">
-            <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-              <div className="border-b border-slate-200 pb-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-600">
-                  Deal Form
-                </p>
-                <h2 className="mt-2 text-2xl font-bold text-slate-900">
-                  {editingDeal ? "Edit deal" : "Add deal"}
-                </h2>
-                <p className="mt-2 text-slate-600">
-                  Track revenue opportunities under companies and keep the pipeline up to date.
-                </p>
-              </div>
-
-              {dealFormError ? (
-                <div className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                  {dealFormError}
+          <ModuleSection
+            actionLabel="Add deal"
+            description="Keep the sales pipeline organized and update opportunity progress."
+            controls={
+              <select
+                className="crm-control crm-select w-44 sm:w-48"
+                onChange={(event) => setSelectedDealStage(event.target.value)}
+                value={selectedDealStage}
+              >
+                {dealStageOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option === "All" ? "All stages" : option}
+                  </option>
+                ))}
+              </select>
+            }
+            formContent={
+              companies.length === 0 ? (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-700">
+                  Create a company before adding deals.
                 </div>
-              ) : null}
-
-              <div className="mt-6">
-                {companies.length === 0 ? (
-                  <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-700">
-                    Create a company before adding deals.
-                  </div>
-                ) : (
-                  <DealForm
-                    companies={companies}
-                    initialValues={editingDeal}
-                    isSubmitting={isSubmittingDeal}
-                    onCancel={editingDeal ? () => setEditingDeal(null) : null}
-                    onSubmit={editingDeal ? handleUpdateDeal : handleCreateDeal}
-                    submitLabel={editingDeal ? "Update deal" : "Add deal"}
-                  />
-                )}
-              </div>
-            </div>
-
-            <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-              <div className="flex flex-col gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-600">
-                    Deal List
-                  </p>
-                  <h2 className="mt-2 text-2xl font-bold text-slate-900">Deals</h2>
-                  <p className="mt-2 text-slate-600">
-                    View, edit, and delete deals while tracking pipeline progress.
-                  </p>
+              ) : (
+                <DealForm
+                  companies={companies}
+                  initialValues={editingDeal}
+                  isSubmitting={isSubmittingDeal}
+                  onCancel={closeDealForm}
+                  onSubmit={editingDeal ? handleUpdateDeal : handleCreateDeal}
+                  submitLabel={editingDeal ? "Update deal" : "Add deal"}
+                />
+              )
+            }
+            formError={dealFormError}
+            formTitle={editingDeal ? "Edit deal" : "Add deal"}
+            isFormOpen={isDealFormOpen}
+            listContent={
+              isLoadingDeals ? (
+                <div className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-8 text-sm text-slate-600">
+                  Loading deals...
                 </div>
+              ) : (
+                <DealList
+                  deals={deals}
+                  deletingDealId={deletingDealId}
+                  emptyMessage={dealsEmptyMessage}
+                  onDelete={handleDeleteDeal}
+                  onEdit={handleEditDeal}
+                />
+              )
+            }
+            listError={dealsError}
+            onCloseForm={closeDealForm}
+            onPrimaryAction={openDealCreateForm}
+            onRefresh={() => loadDeals(selectedDealStage)}
+            title="Deals"
+          />
+        ) : null}
 
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <select
-                    className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
-                    onChange={(event) => setSelectedDealStage(event.target.value)}
-                    value={selectedDealStage}
-                  >
-                    {dealStageOptions.map((option) => (
-                      <option key={option} value={option}>
-                        {option === "All" ? "All stages" : option}
-                      </option>
-                    ))}
-                  </select>
+        {activeSection === "activities" ? (
+          <ModuleSection
+            actionLabel="Add activity"
+            description="Capture timeline updates linked to companies or related deals."
+            controls={
+              <>
+                <select
+                  className="crm-control crm-select w-44 sm:w-48"
+                  onChange={(event) => setSelectedActivityCompany(event.target.value)}
+                  value={selectedActivityCompany}
+                >
+                  <option value={allCompaniesValue}>All companies</option>
+                  {companies.map((company) => (
+                    <option key={company.id} value={company.id}>
+                      {company.name}
+                    </option>
+                  ))}
+                </select>
 
-                  <button
-                    className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-100"
-                    onClick={() => loadDeals(selectedDealStage)}
-                    type="button"
-                  >
-                    Refresh list
-                  </button>
+                <select
+                  className="crm-control crm-select w-40 sm:w-44"
+                  onChange={(event) => setSelectedActivityType(event.target.value)}
+                  value={selectedActivityType}
+                >
+                  {activityTypeOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option === "All" ? "All activity types" : option}
+                    </option>
+                  ))}
+                </select>
+              </>
+            }
+            formContent={
+              companies.length === 0 ? (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-700">
+                  Create a company before adding activities.
                 </div>
-              </div>
-
-              {dealsError ? (
-                <div className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                  {dealsError}
+              ) : (
+                <ActivityForm
+                  companies={companies}
+                  deals={allDeals}
+                  initialValues={editingActivity}
+                  isSubmitting={isSubmittingActivity}
+                  onCancel={closeActivityForm}
+                  onSubmit={editingActivity ? handleUpdateActivity : handleCreateActivity}
+                  submitLabel={editingActivity ? "Update activity" : "Add activity"}
+                />
+              )
+            }
+            formError={activityFormError}
+            formTitle={editingActivity ? "Edit activity" : "Add activity"}
+            isFormOpen={isActivityFormOpen}
+            listContent={
+              isLoadingActivities ? (
+                <div className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-8 text-sm text-slate-600">
+                  Loading activities...
                 </div>
-              ) : null}
+              ) : (
+                <ActivityList
+                  activities={activities}
+                  deletingActivityId={deletingActivityId}
+                  emptyMessage={activitiesEmptyMessage}
+                  onDelete={handleDeleteActivity}
+                  onEdit={handleEditActivity}
+                />
+              )
+            }
+            listError={activitiesError}
+            onCloseForm={closeActivityForm}
+            onPrimaryAction={openActivityCreateForm}
+            onRefresh={() => loadActivities(selectedActivityCompany, selectedActivityType)}
+            title="Activities"
+          />
+        ) : null}
 
-              <div className="mt-6">
-                {isLoadingDeals ? (
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-8 text-sm text-slate-600">
-                    Loading deals...
-                  </div>
-                ) : (
-                  <DealList
-                    deals={deals}
-                    deletingDealId={deletingDealId}
-                    emptyMessage={dealsEmptyMessage}
-                    onDelete={handleDeleteDeal}
-                    onEdit={setEditingDeal}
-                  />
-                )}
-              </div>
-            </div>
-          </section>
+        {activeSection === "tasks" ? (
+          <ModuleSection
+            actionLabel="Add task"
+            description="Track open work, overdue items, and completed follow-up actions."
+            controls={
+              <>
+                <select
+                  className="crm-control crm-select w-44 sm:w-48"
+                  onChange={(event) => setSelectedTaskCompany(event.target.value)}
+                  value={selectedTaskCompany}
+                >
+                  <option value={allCompaniesValue}>All companies</option>
+                  {companies.map((company) => (
+                    <option key={company.id} value={company.id}>
+                      {company.name}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  className="crm-control crm-select w-40 sm:w-44"
+                  onChange={(event) => setSelectedTaskStatus(event.target.value)}
+                  value={selectedTaskStatus}
+                >
+                  {taskStatusOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option === "All" ? "All statuses" : option}
+                    </option>
+                  ))}
+                </select>
+
+                <button
+                  className={`crm-control crm-button ${
+                    showOverdueTasksOnly
+                      ? "crm-button-secondary crm-button-toggle-active"
+                      : "crm-button-secondary"
+                  }`}
+                  onClick={() => setShowOverdueTasksOnly((current) => !current)}
+                  type="button"
+                >
+                  {showOverdueTasksOnly ? "Overdue only" : "Show overdue"}
+                </button>
+              </>
+            }
+            formContent={
+              companies.length === 0 ? (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-700">
+                  Create a company before adding tasks.
+                </div>
+              ) : (
+                <TaskForm
+                  companies={companies}
+                  deals={allDeals}
+                  initialValues={editingTask}
+                  isSubmitting={isSubmittingTask}
+                  onCancel={closeTaskForm}
+                  onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
+                  submitLabel={editingTask ? "Update task" : "Add task"}
+                />
+              )
+            }
+            formError={taskFormError}
+            formTitle={editingTask ? "Edit task" : "Add task"}
+            isFormOpen={isTaskFormOpen}
+            listContent={
+              isLoadingTasks ? (
+                <div className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-8 text-sm text-slate-600">
+                  Loading tasks...
+                </div>
+              ) : (
+                <TaskList
+                  completingTaskId={completingTaskId}
+                  deletingTaskId={deletingTaskId}
+                  emptyMessage={tasksEmptyMessage}
+                  onComplete={handleCompleteTask}
+                  onDelete={handleDeleteTask}
+                  onEdit={handleEditTask}
+                  tasks={tasks}
+                />
+              )
+            }
+            listError={tasksError}
+            onCloseForm={closeTaskForm}
+            onPrimaryAction={openTaskCreateForm}
+            onRefresh={() =>
+              loadTasks(selectedTaskCompany, selectedTaskStatus, showOverdueTasksOnly)
+            }
+            title="Tasks"
+          />
         ) : null}
 
         {activeSection === "dashboard" ? (
-          <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-600">
-              Dashboard
-            </p>
-            <h2 className="mt-2 text-2xl font-bold text-slate-900">Dashboard</h2>
-            <p className="mt-3 text-slate-600">
+          <section className="rounded-3xl border border-stone-200 bg-white px-6 py-8 shadow-sm">
+            <h3 className="text-xl font-semibold text-slate-900">Dashboard</h3>
+            <p className="mt-2 text-sm text-slate-500">
               Dashboard will be implemented in Milestone 6.
             </p>
           </section>

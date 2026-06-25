@@ -2,37 +2,34 @@ import { useEffect, useState } from "react";
 
 const emptyForm = {
   company_id: "",
+  deal_id: "",
   title: "",
-  value: "",
-  pipeline_stage: "Lead",
-  expected_close_date: "",
-  notes: "",
+  description: "",
+  due_date: "",
+  status: "Open",
 };
 
-const stageOptions = ["Lead", "Qualified", "Proposal", "Negotiation", "Won", "Lost"];
+const taskStatusOptions = ["Open", "Completed", "Cancelled"];
 const baseFieldClassName =
   "w-full rounded-xl border bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:ring-4";
 const defaultFieldClassName =
   "border-stone-200 focus:border-teal-600 focus:ring-teal-100";
 const errorFieldClassName = "border-rose-500 focus:border-rose-500 focus:ring-rose-100";
-const valueErrorMessage = "Deal value must be a positive number.";
 
 function normalizeFormValues(initialValues) {
   return {
     company_id: initialValues?.company_id ? String(initialValues.company_id) : "",
+    deal_id: initialValues?.deal_id ? String(initialValues.deal_id) : "",
     title: initialValues?.title ?? "",
-    value:
-      initialValues?.value !== undefined && initialValues?.value !== null
-        ? String(initialValues.value)
-        : "",
-    pipeline_stage: initialValues?.pipeline_stage ?? "Lead",
-    expected_close_date: initialValues?.expected_close_date ?? "",
-    notes: initialValues?.notes ?? "",
+    description: initialValues?.description ?? "",
+    due_date: initialValues?.due_date ?? "",
+    status: initialValues?.status ?? "Open",
   };
 }
 
-function DealForm({
+function TaskForm({
   companies,
+  deals,
   initialValues,
   isSubmitting,
   onCancel,
@@ -47,33 +44,54 @@ function DealForm({
     setErrors({});
   }, [initialValues]);
 
+  const companyDeals = formData.company_id
+    ? deals.filter((deal) => String(deal.company_id) === formData.company_id)
+    : [];
+
   function handleChange(event) {
     const { name, value } = event.target;
-    setFormData((current) => ({
-      ...current,
-      [name]: value,
-    }));
+
+    setFormData((current) => {
+      const nextFormData = {
+        ...current,
+        [name]: value,
+      };
+
+      if (name === "company_id") {
+        const nextDealExists = deals.some(
+          (deal) =>
+            String(deal.id) === current.deal_id && String(deal.company_id) === value,
+        );
+
+        if (!nextDealExists) {
+          nextFormData.deal_id = "";
+        }
+      }
+
+      return nextFormData;
+    });
 
     setErrors((current) => {
-      if (!current[name]) {
+      if (!current[name] && !(name === "company_id" && current.deal_id)) {
         return current;
       }
 
       const trimmedValue = typeof value === "string" ? value.trim() : value;
-
-      if (name === "value") {
-        const numericValue = Number(trimmedValue);
-        if (!trimmedValue || Number.isNaN(numericValue) || numericValue <= 0) {
-          return current;
-        }
-      }
-
-      if (!trimmedValue) {
-        return current;
-      }
-
       const nextErrors = { ...current };
-      delete nextErrors[name];
+
+      if (name === "company_id" && trimmedValue) {
+        delete nextErrors.company_id;
+        delete nextErrors.deal_id;
+      }
+
+      if (name === "deal_id") {
+        delete nextErrors.deal_id;
+      }
+
+      if (name !== "company_id" && name !== "deal_id" && trimmedValue) {
+        delete nextErrors[name];
+      }
+
       return nextErrors;
     });
   }
@@ -86,24 +104,22 @@ function DealForm({
     }
 
     if (!formData.title.trim()) {
-      nextErrors.title = "Deal title is required.";
+      nextErrors.title = "Task title is required.";
     }
 
-    if (!formData.value.trim()) {
-      nextErrors.value = "Deal value is required.";
-    } else {
-      const numericValue = Number(formData.value.trim());
-      if (Number.isNaN(numericValue) || numericValue <= 0) {
-        nextErrors.value = valueErrorMessage;
-      }
+    if (!formData.due_date.trim()) {
+      nextErrors.due_date = "Due date is required.";
     }
 
-    if (!formData.pipeline_stage.trim()) {
-      nextErrors.pipeline_stage = "Pipeline stage is required.";
+    if (!formData.status.trim()) {
+      nextErrors.status = "Status is required.";
     }
 
-    if (!formData.expected_close_date.trim()) {
-      nextErrors.expected_close_date = "Expected close date is required.";
+    if (
+      formData.deal_id &&
+      !companyDeals.some((deal) => String(deal.id) === formData.deal_id)
+    ) {
+      nextErrors.deal_id = "Selected deal does not belong to the selected company.";
     }
 
     setErrors(nextErrors);
@@ -119,11 +135,11 @@ function DealForm({
   function buildPayload() {
     return {
       company_id: Number(formData.company_id),
+      deal_id: formData.deal_id ? Number(formData.deal_id) : null,
       title: formData.title.trim(),
-      value: Number(formData.value.trim()),
-      pipeline_stage: formData.pipeline_stage,
-      expected_close_date: formData.expected_close_date,
-      notes: formData.notes.trim() || null,
+      description: formData.description.trim() || null,
+      due_date: formData.due_date,
+      status: formData.status,
     };
   }
 
@@ -173,14 +189,14 @@ function DealForm({
 
       <div>
         <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="title">
-          Deal title *
+          Task title *
         </label>
         <input
           className={inputClassName("title")}
           id="title"
           name="title"
           onChange={handleChange}
-          placeholder="Annual software renewal"
+          placeholder="Follow up on pricing proposal"
           value={formData.title}
         />
         {errors.title ? <p className="mt-1 text-sm text-rose-600">{errors.title}</p> : null}
@@ -188,78 +204,85 @@ function DealForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="value">
-            Deal value *
+          <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="due_date">
+            Due date *
           </label>
           <input
-            className={inputClassName("value")}
-            id="value"
-            inputMode="decimal"
-            name="value"
+            className={inputClassName("due_date")}
+            id="due_date"
+            name="due_date"
             onChange={handleChange}
-            placeholder="15000"
-            value={formData.value}
+            type="date"
+            value={formData.due_date}
           />
-          {errors.value ? <p className="mt-1 text-sm text-rose-600">{errors.value}</p> : null}
+          {errors.due_date ? (
+            <p className="mt-1 text-sm text-rose-600">{errors.due_date}</p>
+          ) : null}
         </div>
 
         <div>
-          <label
-            className="mb-1.5 block text-sm font-medium text-slate-700"
-            htmlFor="pipeline_stage"
-          >
-            Pipeline stage *
+          <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="status">
+            Status *
           </label>
           <select
-            className={inputClassName("pipeline_stage")}
-            id="pipeline_stage"
-            name="pipeline_stage"
+            className={inputClassName("status")}
+            id="status"
+            name="status"
             onChange={handleChange}
-            value={formData.pipeline_stage}
+            value={formData.status}
           >
-            {stageOptions.map((stage) => (
-              <option key={stage} value={stage}>
-                {stage}
+            {taskStatusOptions.map((statusOption) => (
+              <option key={statusOption} value={statusOption}>
+                {statusOption}
               </option>
             ))}
           </select>
-          {errors.pipeline_stage ? (
-            <p className="mt-1 text-sm text-rose-600">{errors.pipeline_stage}</p>
-          ) : null}
+          {errors.status ? <p className="mt-1 text-sm text-rose-600">{errors.status}</p> : null}
         </div>
+      </div>
+
+      <div>
+        <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="deal_id">
+          Deal
+        </label>
+        <select
+          className={inputClassName("deal_id")}
+          id="deal_id"
+          name="deal_id"
+          onChange={handleChange}
+          value={formData.deal_id}
+        >
+          <option value="">No related deal</option>
+          {companyDeals.map((deal) => (
+            <option key={deal.id} value={deal.id}>
+              {deal.title}
+            </option>
+          ))}
+        </select>
+        {errors.deal_id ? (
+          <p className="mt-1 text-sm text-rose-600">{errors.deal_id}</p>
+        ) : null}
+        {formData.company_id && companyDeals.length === 0 ? (
+          <p className="mt-2 text-sm text-slate-500">
+            No deals found for this company. You can still create a company-level task.
+          </p>
+        ) : null}
       </div>
 
       <div>
         <label
           className="mb-1.5 block text-sm font-medium text-slate-700"
-          htmlFor="expected_close_date"
+          htmlFor="description"
         >
-          Expected close date *
-        </label>
-        <input
-          className={inputClassName("expected_close_date")}
-          id="expected_close_date"
-          name="expected_close_date"
-          onChange={handleChange}
-          type="date"
-          value={formData.expected_close_date}
-        />
-        {errors.expected_close_date ? (
-          <p className="mt-1 text-sm text-rose-600">{errors.expected_close_date}</p>
-        ) : null}
-      </div>
-
-      <div>
-        <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="notes">
-          Notes
+          Description
         </label>
         <textarea
           className={`min-h-32 ${baseFieldClassName} ${defaultFieldClassName}`}
-          id="notes"
-          name="notes"
+          id="description"
+          name="description"
           onChange={handleChange}
-          placeholder="Any context about the opportunity..."
-          value={formData.notes}
+          placeholder="Add any follow-up details or context..."
+          value={formData.description}
         />
       </div>
 
@@ -286,4 +309,4 @@ function DealForm({
   );
 }
 
-export default DealForm;
+export default TaskForm;

@@ -13,7 +13,7 @@ const emptyForm = {
 const baseFieldClassName =
   "w-full rounded-xl border bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:ring-4";
 const defaultFieldClassName =
-  "border-slate-300 focus:border-indigo-500 focus:ring-indigo-100";
+  "border-stone-200 focus:border-teal-600 focus:ring-teal-100";
 const errorFieldClassName = "border-rose-500 focus:border-rose-500 focus:ring-rose-100";
 const phoneErrorMessage =
   "Phone must contain only digits and be 10 or 11 digits long.";
@@ -292,7 +292,7 @@ function ContactForm({
 
       <div className="flex flex-wrap gap-3 pt-2">
         <button
-          className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-100 disabled:cursor-not-allowed disabled:bg-indigo-300"
+          className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-blue-300"
           disabled={isSubmitting}
           type="submit"
         >
@@ -301,7 +301,7 @@ function ContactForm({
 
         {onCancel ? (
           <button
-            className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-slate-100"
+            className="rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-stone-50 focus:outline-none focus:ring-4 focus:ring-stone-100"
             onClick={onCancel}
             type="button"
           >

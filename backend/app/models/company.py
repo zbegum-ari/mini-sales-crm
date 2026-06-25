@@ -20,6 +20,8 @@ class Company(Base):
     notes = Column(Text, nullable=True)
     contacts = relationship("Contact", back_populates="company", cascade="all, delete-orphan")
     deals = relationship("Deal", back_populates="company", cascade="all, delete-orphan")
+    activities = relationship("Activity", back_populates="company", cascade="all, delete-orphan")
+    tasks = relationship("Task", back_populates="company", cascade="all, delete-orphan")
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(
         DateTime,
