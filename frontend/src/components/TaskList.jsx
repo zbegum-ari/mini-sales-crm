@@ -1,3 +1,8 @@
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+
 function getTodayDateString() {
   const today = new Date();
   const year = today.getFullYear();
@@ -33,7 +38,11 @@ function TaskList({
   tasks,
 }) {
   if (tasks.length === 0) {
-    return <div className="crm-empty-state">{emptyMessage}</div>;
+    return (
+      <Alert className="crm-empty-state border-slate-200 bg-slate-50/80 text-slate-600">
+        <AlertDescription>{emptyMessage}</AlertDescription>
+      </Alert>
+    );
   }
 
   return (
@@ -42,25 +51,23 @@ function TaskList({
         const overdue = isOverdue(task);
 
         return (
-          <article
-            className="crm-list-card"
-            key={task.id}
-          >
+          <Card className="crm-list-card border-slate-200/90 py-0" key={task.id}>
+            <CardContent className="px-5 py-4">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div className="min-w-0 space-y-3">
                 <div className="flex flex-wrap items-center gap-2.5">
                   <h3 className="text-lg font-semibold text-slate-900">{task.title}</h3>
-                  <span
+                  <Badge
                     className={`crm-chip px-3 py-1 text-xs font-semibold ring-1 ${statusClassName(
                       task.status,
                     )}`}
                   >
                     {task.status}
-                  </span>
+                  </Badge>
                   {overdue ? (
-                    <span className="crm-chip rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 ring-1 ring-amber-200">
+                    <Badge className="crm-chip rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 ring-1 ring-amber-200">
                       Overdue
-                    </span>
+                    </Badge>
                   ) : null}
                 </div>
 
@@ -89,34 +96,40 @@ function TaskList({
               </div>
 
               <div className="flex shrink-0 flex-wrap gap-2">
-                <button
+                <Button
                   className="crm-button crm-button-inline crm-button-secondary"
                   onClick={() => onEdit(task)}
+                  size="sm"
                   type="button"
+                  variant="outline"
                 >
                   Edit
-                </button>
+                </Button>
                 {task.status === "Open" ? (
-                  <button
+                  <Button
                     className="crm-button crm-button-inline crm-button-success"
                     disabled={completingTaskId === task.id}
                     onClick={() => onComplete(task)}
+                    size="sm"
                     type="button"
                   >
                     {completingTaskId === task.id ? "Saving..." : "Mark completed"}
-                  </button>
+                  </Button>
                 ) : null}
-                <button
+                <Button
                   className="crm-button crm-button-inline crm-button-danger"
                   disabled={deletingTaskId === task.id}
                   onClick={() => onDelete(task)}
+                  size="sm"
                   type="button"
+                  variant="destructive"
                 >
                   {deletingTaskId === task.id ? "Deleting..." : "Delete"}
-                </button>
+                </Button>
               </div>
             </div>
-          </article>
+            </CardContent>
+          </Card>
         );
       })}
     </div>

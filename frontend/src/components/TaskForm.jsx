@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
 
+import CRMSelectField from "@/components/ui/crm-select-field";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+
 const emptyForm = {
   company_id: "",
   deal_id: "",
@@ -158,28 +164,26 @@ function TaskForm({
 
   return (
     <form className="space-y-5" noValidate onSubmit={handleSubmit}>
-      <p className="crm-form-hint">
-        Fields marked with * are required.
-      </p>
+      <Alert className="crm-form-hint border-slate-200 bg-slate-50/80">
+        <AlertDescription>Fields marked with * are required.</AlertDescription>
+      </Alert>
 
       <div>
         <label className="crm-label" htmlFor="company_id">
           Company *
         </label>
-        <select
-          className={inputClassName("company_id")}
-          id="company_id"
-          name="company_id"
-          onChange={handleChange}
+        <CRMSelectField
+          items={[
+            { value: "", label: "Select a company", disabled: true },
+            ...companies.map((company) => ({
+              value: String(company.id),
+              label: company.name,
+            })),
+          ]}
+          onValueChange={(value) => handleChange({ target: { name: "company_id", value } })}
+          triggerClassName={inputClassName("company_id")}
           value={formData.company_id}
-        >
-          <option value="">Select a company</option>
-          {companies.map((company) => (
-            <option key={company.id} value={company.id}>
-              {company.name}
-            </option>
-          ))}
-        </select>
+        />
         {errors.company_id ? <p className="crm-error-text">{errors.company_id}</p> : null}
       </div>
 
@@ -187,7 +191,7 @@ function TaskForm({
         <label className="crm-label" htmlFor="title">
           Task title *
         </label>
-        <input
+        <Input
           className={inputClassName("title")}
           id="title"
           name="title"
@@ -203,7 +207,7 @@ function TaskForm({
           <label className="crm-label" htmlFor="due_date">
             Due date *
           </label>
-          <input
+          <Input
             className={inputClassName("due_date")}
             id="due_date"
             name="due_date"
@@ -218,19 +222,15 @@ function TaskForm({
           <label className="crm-label" htmlFor="status">
             Status *
           </label>
-          <select
-            className={inputClassName("status")}
-            id="status"
-            name="status"
-            onChange={handleChange}
+          <CRMSelectField
+            items={taskStatusOptions.map((statusOption) => ({
+              value: statusOption,
+              label: statusOption,
+            }))}
+            onValueChange={(value) => handleChange({ target: { name: "status", value } })}
+            triggerClassName={inputClassName("status")}
             value={formData.status}
-          >
-            {taskStatusOptions.map((statusOption) => (
-              <option key={statusOption} value={statusOption}>
-                {statusOption}
-              </option>
-            ))}
-          </select>
+          />
           {errors.status ? <p className="crm-error-text">{errors.status}</p> : null}
         </div>
       </div>
@@ -239,20 +239,18 @@ function TaskForm({
         <label className="crm-label" htmlFor="deal_id">
           Deal
         </label>
-        <select
-          className={inputClassName("deal_id")}
-          id="deal_id"
-          name="deal_id"
-          onChange={handleChange}
+        <CRMSelectField
+          items={[
+            { value: "", label: "No related deal" },
+            ...companyDeals.map((deal) => ({
+              value: String(deal.id),
+              label: deal.title,
+            })),
+          ]}
+          onValueChange={(value) => handleChange({ target: { name: "deal_id", value } })}
+          triggerClassName={inputClassName("deal_id")}
           value={formData.deal_id}
-        >
-          <option value="">No related deal</option>
-          {companyDeals.map((deal) => (
-            <option key={deal.id} value={deal.id}>
-              {deal.title}
-            </option>
-          ))}
-        </select>
+        />
         {errors.deal_id ? <p className="crm-error-text">{errors.deal_id}</p> : null}
         {formData.company_id && companyDeals.length === 0 ? (
           <p className="mt-2 text-sm leading-6 text-slate-500">
@@ -265,7 +263,7 @@ function TaskForm({
         <label className="crm-label" htmlFor="description">
           Description
         </label>
-        <textarea
+        <Textarea
           className={`min-h-32 resize-y ${baseFieldClassName} ${defaultFieldClassName}`}
           id="description"
           name="description"
@@ -276,22 +274,23 @@ function TaskForm({
       </div>
 
       <div className="flex flex-wrap gap-3 pt-2">
-        <button
+        <Button
           className="crm-button crm-button-primary"
           disabled={isSubmitting}
           type="submit"
         >
           {isSubmitting ? "Saving..." : submitLabel}
-        </button>
+        </Button>
 
         {onCancel ? (
-          <button
+          <Button
             className="crm-button crm-button-secondary"
             onClick={onCancel}
             type="button"
+            variant="outline"
           >
             Cancel
-          </button>
+          </Button>
         ) : null}
       </div>
     </form>

@@ -11,6 +11,13 @@ import DealList from "./components/DealList";
 import Dashboard from "./components/Dashboard";
 import TaskForm from "./components/TaskForm";
 import TaskList from "./components/TaskList";
+import konvoLogo from "./assets/konvo-logo.png";
+import { Badge } from "./components/ui/badge";
+import CRMSelectField from "./components/ui/crm-select-field";
+import { Alert, AlertDescription } from "./components/ui/alert";
+import { Button } from "./components/ui/button";
+import { Card, CardContent } from "./components/ui/card";
+import { Input } from "./components/ui/input";
 import {
   checkHealth,
   createActivity,
@@ -99,64 +106,42 @@ function getStatusBadge(isConnected, status) {
   };
 }
 
-function AppShellHeader({ activeSection, isConnected, sections, status, onSectionChange }) {
-  const activeMeta = sectionMeta[activeSection];
-  const badge = getStatusBadge(isConnected, status);
+function AppSidebar({ activeSection, sections, onSectionChange }) {
+  const [showLogoFallback, setShowLogoFallback] = useState(false);
 
   return (
-    <section className="crm-panel overflow-hidden">
-      <div className="border-b border-slate-200/90 px-6 py-6 sm:px-7">
-        <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-          <div className="min-w-0 space-y-5">
-            <div className="flex items-start gap-4">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-blue-100 bg-blue-50 text-sm font-semibold text-blue-700 shadow-sm">
-                MS
-              </div>
-
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-cyan-700">
-                  Mini Sales CRM
-                </p>
-                <h1 className="mt-1 text-[1.8rem] font-semibold tracking-tight text-slate-950">
-                  Internal sales workspace
-                </h1>
-                <p className="mt-1.5 max-w-2xl text-sm leading-6 text-slate-500">
-                  Keep your pipeline, follow-ups, and customer records in one calm,
-                  focused local workspace.
-                </p>
-              </div>
-            </div>
-
-            <div className="crm-panel-subtle max-w-2xl px-4 py-3.5">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Current section
-              </p>
-              <h2 className="mt-1.5 text-lg font-semibold tracking-tight text-slate-900">
-                {activeMeta.title}
-              </h2>
-              <p className="mt-1.5 text-sm leading-6 text-slate-500">
-                {activeMeta.description}
-              </p>
-            </div>
+    <Card className={`crm-page-surface crm-sidebar-surface crm-theme-${activeSection} py-0`}>
+      <div className="crm-sidebar-brand px-5 py-5 sm:px-6">
+        <div className="space-y-4">
+          <div className="crm-sidebar-logo-wrap">
+            {showLogoFallback ? (
+              <span className="text-base font-semibold text-slate-800">Konvo</span>
+            ) : (
+              <img
+                alt="Konvo logo"
+                className="crm-sidebar-logo"
+                onError={() => setShowLogoFallback(true)}
+                src={konvoLogo}
+              />
+            )}
           </div>
 
-          <div
-            className={`inline-flex items-center gap-2 self-start rounded-full border px-3 py-1.5 text-xs font-semibold shadow-sm ${badge.className}`}
-          >
-            <span className={`h-2 w-2 rounded-full ${badge.dotClassName}`} />
-            {badge.label}
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-cyan-700">
+              Mini Sales CRM
+            </p>
+            <h1 className="mt-1 text-lg font-semibold tracking-tight text-slate-950">
+              Internal workspace
+            </h1>
           </div>
         </div>
       </div>
 
-      <nav
-        className="flex flex-wrap gap-2 bg-slate-50/70 px-6 py-4 sm:px-7"
-        aria-label="Primary"
-      >
+      <nav className="crm-sidebar-nav px-5 py-5 sm:px-6" aria-label="Primary">
         {sections.map((section) => (
           <button
             key={section.id}
-            className={`crm-nav-tab ${activeSection === section.id ? "crm-nav-tab-active" : ""}`}
+            className={`crm-sidebar-link ${activeSection === section.id ? "crm-sidebar-link-active" : ""}`}
             onClick={() => onSectionChange(section.id)}
             type="button"
           >
@@ -164,13 +149,44 @@ function AppShellHeader({ activeSection, isConnected, sections, status, onSectio
           </button>
         ))}
       </nav>
-    </section>
+    </Card>
+  );
+}
+
+function MainContentHeader({ activeSection, isConnected, status }) {
+  const activeMeta = sectionMeta[activeSection];
+  const badge = getStatusBadge(isConnected, status);
+
+  return (
+    <Card className={`crm-page-surface crm-content-header crm-theme-${activeSection} py-0`}>
+      <CardContent className="px-5 py-5 sm:px-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              Current section
+            </p>
+            <h2 className="mt-1.5 text-[1.55rem] font-semibold tracking-tight text-slate-950">
+              {activeMeta.title}
+            </h2>
+            <p className="mt-1.5 max-w-2xl text-sm leading-6 text-slate-500">
+              {activeMeta.description}
+            </p>
+          </div>
+
+          <Badge
+            className={`inline-flex h-auto items-center gap-2 self-start rounded-full border px-3 py-1.5 text-xs font-semibold shadow-sm ${badge.className}`}
+          >
+            <span className={`h-2 w-2 rounded-full ${badge.dotClassName}`} />
+            {badge.label}
+          </Badge>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
 function ModuleSection({
   actionLabel,
-  description,
   controls,
   formContent,
   formError,
@@ -181,79 +197,93 @@ function ModuleSection({
   onCloseForm,
   onPrimaryAction,
   onRefresh,
-  title,
+  panelDescription,
+  panelTitle,
+  theme,
 }) {
   return (
-    <section className="space-y-4">
-      <div className="crm-panel px-5 py-5 sm:px-6">
-        <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-          <div className="max-w-2xl">
-            <h3 className="text-xl font-semibold tracking-tight text-slate-950">{title}</h3>
-            <p className="mt-1.5 text-sm leading-6 text-slate-500">{description}</p>
-          </div>
+    <section className={`crm-module-section crm-theme-${theme} space-y-5`}>
+      <Card className="crm-page-surface crm-module-header py-0">
+        <CardContent className="px-5 py-4 sm:px-6">
+          <div className="crm-action-panel flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+            <div className="min-w-0">
+              <h3 className="text-base font-semibold tracking-tight text-slate-950">
+                {panelTitle}
+              </h3>
+              <p className="mt-1 text-sm leading-6 text-slate-500">
+                {panelDescription}
+              </p>
+            </div>
 
-          <div className="flex w-full xl:w-auto xl:justify-end">
-            <div className="crm-action-row xl:justify-end">
-              {controls}
-              {onRefresh ? (
-                <button
-                  className="crm-control crm-button crm-button-secondary"
-                  onClick={onRefresh}
+            <div className="flex w-full xl:w-auto xl:justify-end">
+              <div className="crm-action-row xl:justify-end">
+                {controls}
+                {onRefresh ? (
+                  <Button
+                    className="crm-button crm-button-secondary"
+                    onClick={onRefresh}
+                    type="button"
+                    variant="outline"
+                  >
+                    Refresh
+                  </Button>
+                ) : null}
+
+                <Button
+                  className="crm-button crm-button-primary crm-button-module"
+                  onClick={onPrimaryAction}
                   type="button"
                 >
-                  Refresh
-                </button>
-              ) : null}
-
-              <button
-                className="crm-control crm-button crm-button-primary"
-                onClick={onPrimaryAction}
-                type="button"
-              >
-                {actionLabel}
-              </button>
+                  {actionLabel}
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {isFormOpen ? (
-        <div className="crm-panel px-5 py-5 sm:px-6">
-          <div className="flex flex-col gap-3 border-b border-slate-200 pb-4 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <h4 className="text-lg font-semibold tracking-tight text-slate-950">
-                {formTitle}
-              </h4>
+        <Card className="crm-page-surface crm-module-form-panel py-0">
+          <CardContent className="px-5 py-5 sm:px-6">
+            <div className="flex flex-col gap-3 border-b border-slate-200 pb-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h4 className="text-lg font-semibold tracking-tight text-slate-950">
+                  {formTitle}
+                </h4>
+              </div>
+
+              <Button
+                className="crm-button crm-button-secondary"
+                onClick={onCloseForm}
+                type="button"
+                variant="outline"
+              >
+                Close
+              </Button>
             </div>
 
-            <button
-              className="crm-control crm-button crm-button-secondary"
-              onClick={onCloseForm}
-              type="button"
-            >
-              Close
-            </button>
-          </div>
+            {formError ? (
+              <Alert className="mt-5 border-rose-200 bg-rose-50 text-rose-700">
+                <AlertDescription>{formError}</AlertDescription>
+              </Alert>
+            ) : null}
 
-          {formError ? (
-            <div className="crm-alert crm-alert-danger mt-5">
-              {formError}
-            </div>
-          ) : null}
-
-          <div className="mt-5">{formContent}</div>
-        </div>
+            <div className="mt-5">{formContent}</div>
+          </CardContent>
+        </Card>
       ) : null}
 
-      <div className="crm-panel px-5 py-5 sm:px-6">
-        {listError ? (
-          <div className="crm-alert crm-alert-danger mb-5">
-            {listError}
-          </div>
-        ) : null}
+      <Card className="crm-page-surface crm-module-list-panel py-0">
+        <CardContent className="px-5 py-5 sm:px-6">
+          {listError ? (
+            <Alert className="mb-5 border-rose-200 bg-rose-50 text-rose-700">
+              <AlertDescription>{listError}</AlertDescription>
+            </Alert>
+          ) : null}
 
-        {listContent}
-      </div>
+          {listContent}
+        </CardContent>
+      </Card>
     </section>
   );
 }
@@ -1010,46 +1040,51 @@ function App() {
         : "No tasks found for the selected filters.";
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden px-4 py-6 sm:px-6 lg:px-8">
+    <main className={`crm-app-shell crm-theme-${activeSection} relative min-h-screen overflow-x-hidden px-4 py-6 sm:px-6 lg:px-8`}>
       <div className="pointer-events-none absolute inset-x-0 top-0 h-80 overflow-hidden">
-        <div className="absolute left-[8%] top-0 h-56 w-56 rounded-full bg-blue-200/20 blur-3xl" />
-        <div className="absolute right-[12%] top-10 h-48 w-48 rounded-full bg-cyan-200/20 blur-3xl" />
+        <div className="crm-bg-orb crm-bg-orb-primary absolute left-[6%] top-0 h-64 w-64 rounded-full blur-3xl" />
+        <div className="crm-bg-orb crm-bg-orb-secondary absolute right-[10%] top-8 h-56 w-56 rounded-full blur-3xl" />
+        <div className="crm-bg-orb crm-bg-orb-tertiary absolute left-1/2 top-28 h-44 w-44 -translate-x-1/2 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative mx-auto flex max-w-[1180px] flex-col gap-5">
-        <AppShellHeader
-          activeSection={activeSection}
-          isConnected={isConnected}
-          sections={sections}
-          status={status}
-          onSectionChange={setActiveSection}
-        />
+      <div className="crm-dashboard-shell relative mx-auto max-w-[1320px]">
+        <div className="crm-sidebar-shell">
+          <AppSidebar
+            activeSection={activeSection}
+            sections={sections}
+            onSectionChange={setActiveSection}
+          />
+        </div>
 
-        {activeSection === "companies" ? (
-          <ModuleSection
+        <div className="crm-content-column">
+          <MainContentHeader
+            activeSection={activeSection}
+            isConnected={isConnected}
+            status={status}
+          />
+
+          {activeSection === "companies" ? (
+            <ModuleSection
             actionLabel="Add company"
-            description="View and manage account records, company details, and notes."
             controls={
               <>
-                <input
-                  className="crm-control crm-text-control w-full min-w-0 sm:w-56"
+                <Input
+                  className="w-full min-w-0 sm:w-56"
                   onChange={(event) => setCompanySearchQuery(event.target.value)}
                   placeholder="Search company name"
                   type="text"
                   value={companySearchQuery}
                 />
 
-                <select
-                  className="crm-control crm-select w-40 sm:w-44"
-                  onChange={(event) => setSelectedStatus(event.target.value)}
+                <CRMSelectField
+                  items={statusOptions.map((option) => ({
+                    value: option,
+                    label: option === "All" ? "All statuses" : option,
+                  }))}
+                  onValueChange={setSelectedStatus}
+                  triggerClassName="w-40 sm:w-44"
                   value={selectedStatus}
-                >
-                  {statusOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {option === "All" ? "All statuses" : option}
-                    </option>
-                  ))}
-                </select>
+                />
               </>
             }
             formContent={
@@ -1066,9 +1101,9 @@ function App() {
             isFormOpen={isCompanyFormOpen}
             listContent={
               isLoadingCompanies ? (
-                <div className="crm-empty-state">
-                  Loading companies...
-                </div>
+                <Alert className="crm-empty-state border-slate-200 bg-slate-50/80 text-slate-600">
+                  <AlertDescription>Loading companies...</AlertDescription>
+                </Alert>
               ) : (
                 <CompanyList
                   companies={filteredCompanies}
@@ -1083,43 +1118,44 @@ function App() {
             onCloseForm={closeCompanyForm}
             onPrimaryAction={openCompanyCreateForm}
             onRefresh={loadCompanies}
-            title="Companies"
-          />
-        ) : null}
+            panelDescription="Search, filter, and manage saved companies."
+            panelTitle="Company records"
+            theme="companies"
+            />
+          ) : null}
 
-        {activeSection === "contacts" ? (
-          <ModuleSection
+          {activeSection === "contacts" ? (
+            <ModuleSection
             actionLabel="Add contact"
-            description="Manage people linked to your companies and keep their details up to date."
             controls={
               <>
-                <input
-                  className="crm-control crm-text-control w-full min-w-0 sm:w-64"
+                <Input
+                  className="w-full min-w-0 sm:w-64"
                   onChange={(event) => setContactSearchQuery(event.target.value)}
                   placeholder="Search name or email"
                   type="text"
                   value={contactSearchQuery}
                 />
 
-                <select
-                  className="crm-control crm-select w-44 sm:w-48"
-                  onChange={(event) => setSelectedContactCompany(event.target.value)}
+                <CRMSelectField
+                  items={[
+                    { value: allCompaniesValue, label: "All companies" },
+                    ...companies.map((company) => ({
+                      value: String(company.id),
+                      label: company.name,
+                    })),
+                  ]}
+                  onValueChange={setSelectedContactCompany}
+                  triggerClassName="w-44 sm:w-48"
                   value={selectedContactCompany}
-                >
-                  <option value={allCompaniesValue}>All companies</option>
-                  {companies.map((company) => (
-                    <option key={company.id} value={company.id}>
-                      {company.name}
-                    </option>
-                  ))}
-                </select>
+                />
               </>
             }
             formContent={
               companies.length === 0 ? (
-                <div className="crm-alert crm-alert-warning">
-                  Create a company before adding contacts.
-                </div>
+                <Alert className="crm-alert crm-alert-warning border-amber-200 bg-amber-50/80 text-amber-700">
+                  <AlertDescription>Create a company before adding contacts.</AlertDescription>
+                </Alert>
               ) : (
                 <ContactForm
                   companies={companies}
@@ -1136,9 +1172,9 @@ function App() {
             isFormOpen={isContactFormOpen}
             listContent={
               isLoadingContacts ? (
-                <div className="crm-empty-state">
-                  Loading contacts...
-                </div>
+                <Alert className="crm-empty-state border-slate-200 bg-slate-50/80 text-slate-600">
+                  <AlertDescription>Loading contacts...</AlertDescription>
+                </Alert>
               ) : (
                 <ContactList
                   contacts={filteredContacts}
@@ -1153,32 +1189,31 @@ function App() {
             onCloseForm={closeContactForm}
             onPrimaryAction={openContactCreateForm}
             onRefresh={() => loadContacts(selectedContactCompany)}
-            title="Contacts"
-          />
-        ) : null}
+            panelDescription="Search, filter, and manage people linked to companies."
+            panelTitle="Contact records"
+            theme="contacts"
+            />
+          ) : null}
 
-        {activeSection === "deals" ? (
-          <ModuleSection
+          {activeSection === "deals" ? (
+            <ModuleSection
             actionLabel="Add deal"
-            description="Keep the sales pipeline organized and update opportunity progress."
             controls={
-              <select
-                className="crm-control crm-select w-44 sm:w-48"
-                onChange={(event) => setSelectedDealStage(event.target.value)}
+              <CRMSelectField
+                items={dealStageOptions.map((option) => ({
+                  value: option,
+                  label: option === "All" ? "All stages" : option,
+                }))}
+                onValueChange={setSelectedDealStage}
+                triggerClassName="w-44 sm:w-48"
                 value={selectedDealStage}
-              >
-                {dealStageOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option === "All" ? "All stages" : option}
-                  </option>
-                ))}
-              </select>
+              />
             }
             formContent={
               companies.length === 0 ? (
-                <div className="crm-alert crm-alert-warning">
-                  Create a company before adding deals.
-                </div>
+                <Alert className="crm-alert crm-alert-warning border-amber-200 bg-amber-50/80 text-amber-700">
+                  <AlertDescription>Create a company before adding deals.</AlertDescription>
+                </Alert>
               ) : (
                 <DealForm
                   companies={companies}
@@ -1195,9 +1230,9 @@ function App() {
             isFormOpen={isDealFormOpen}
             listContent={
               isLoadingDeals ? (
-                <div className="crm-empty-state">
-                  Loading deals...
-                </div>
+                <Alert className="crm-empty-state border-slate-200 bg-slate-50/80 text-slate-600">
+                  <AlertDescription>Loading deals...</AlertDescription>
+                </Alert>
               ) : (
                 <DealList
                   deals={deals}
@@ -1212,47 +1247,46 @@ function App() {
             onCloseForm={closeDealForm}
             onPrimaryAction={openDealCreateForm}
             onRefresh={() => loadDeals(selectedDealStage)}
-            title="Deals"
-          />
-        ) : null}
+            panelDescription="Filter and update sales opportunities."
+            panelTitle="Deal pipeline"
+            theme="deals"
+            />
+          ) : null}
 
-        {activeSection === "activities" ? (
-          <ModuleSection
+          {activeSection === "activities" ? (
+            <ModuleSection
             actionLabel="Add activity"
-            description="Capture timeline updates linked to companies or related deals."
             controls={
               <>
-                <select
-                  className="crm-control crm-select w-44 sm:w-48"
-                  onChange={(event) => setSelectedActivityCompany(event.target.value)}
+                <CRMSelectField
+                  items={[
+                    { value: allCompaniesValue, label: "All companies" },
+                    ...companies.map((company) => ({
+                      value: String(company.id),
+                      label: company.name,
+                    })),
+                  ]}
+                  onValueChange={setSelectedActivityCompany}
+                  triggerClassName="w-44 sm:w-48"
                   value={selectedActivityCompany}
-                >
-                  <option value={allCompaniesValue}>All companies</option>
-                  {companies.map((company) => (
-                    <option key={company.id} value={company.id}>
-                      {company.name}
-                    </option>
-                  ))}
-                </select>
+                />
 
-                <select
-                  className="crm-control crm-select w-40 sm:w-44"
-                  onChange={(event) => setSelectedActivityType(event.target.value)}
+                <CRMSelectField
+                  items={activityTypeOptions.map((option) => ({
+                    value: option,
+                    label: option === "All" ? "All activity types" : option,
+                  }))}
+                  onValueChange={setSelectedActivityType}
+                  triggerClassName="w-40 sm:w-44"
                   value={selectedActivityType}
-                >
-                  {activityTypeOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {option === "All" ? "All activity types" : option}
-                    </option>
-                  ))}
-                </select>
+                />
               </>
             }
             formContent={
               companies.length === 0 ? (
-                <div className="crm-alert crm-alert-warning">
-                  Create a company before adding activities.
-                </div>
+                <Alert className="crm-alert crm-alert-warning border-amber-200 bg-amber-50/80 text-amber-700">
+                  <AlertDescription>Create a company before adding activities.</AlertDescription>
+                </Alert>
               ) : (
                 <ActivityForm
                   companies={companies}
@@ -1270,9 +1304,9 @@ function App() {
             isFormOpen={isActivityFormOpen}
             listContent={
               isLoadingActivities ? (
-                <div className="crm-empty-state">
-                  Loading activities...
-                </div>
+                <Alert className="crm-empty-state border-slate-200 bg-slate-50/80 text-slate-600">
+                  <AlertDescription>Loading activities...</AlertDescription>
+                </Alert>
               ) : (
                 <ActivityList
                   activities={activities}
@@ -1287,42 +1321,41 @@ function App() {
             onCloseForm={closeActivityForm}
             onPrimaryAction={openActivityCreateForm}
             onRefresh={() => loadActivities(selectedActivityCompany, selectedActivityType)}
-            title="Activities"
-          />
-        ) : null}
+            panelDescription="Review notes, calls, meetings, and follow-ups."
+            panelTitle="Activity timeline"
+            theme="activities"
+            />
+          ) : null}
 
-        {activeSection === "tasks" ? (
-          <ModuleSection
+          {activeSection === "tasks" ? (
+            <ModuleSection
             actionLabel="Add task"
-            description="Track open work, overdue items, and completed follow-up actions."
             controls={
               <>
-                <select
-                  className="crm-control crm-select w-44 sm:w-48"
-                  onChange={(event) => setSelectedTaskCompany(event.target.value)}
+                <CRMSelectField
+                  items={[
+                    { value: allCompaniesValue, label: "All companies" },
+                    ...companies.map((company) => ({
+                      value: String(company.id),
+                      label: company.name,
+                    })),
+                  ]}
+                  onValueChange={setSelectedTaskCompany}
+                  triggerClassName="w-44 sm:w-48"
                   value={selectedTaskCompany}
-                >
-                  <option value={allCompaniesValue}>All companies</option>
-                  {companies.map((company) => (
-                    <option key={company.id} value={company.id}>
-                      {company.name}
-                    </option>
-                  ))}
-                </select>
+                />
 
-                <select
-                  className="crm-control crm-select w-40 sm:w-44"
-                  onChange={(event) => setSelectedTaskStatus(event.target.value)}
+                <CRMSelectField
+                  items={taskStatusOptions.map((option) => ({
+                    value: option,
+                    label: option === "All" ? "All statuses" : option,
+                  }))}
+                  onValueChange={setSelectedTaskStatus}
+                  triggerClassName="w-40 sm:w-44"
                   value={selectedTaskStatus}
-                >
-                  {taskStatusOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {option === "All" ? "All statuses" : option}
-                    </option>
-                  ))}
-                </select>
+                />
 
-                <button
+                <Button
                   className={`crm-control crm-button ${
                     showOverdueTasksOnly
                       ? "crm-button-secondary crm-button-toggle-active"
@@ -1330,16 +1363,17 @@ function App() {
                   }`}
                   onClick={() => setShowOverdueTasksOnly((current) => !current)}
                   type="button"
+                  variant="outline"
                 >
                   {showOverdueTasksOnly ? "Overdue only" : "Show overdue"}
-                </button>
+                </Button>
               </>
             }
             formContent={
               companies.length === 0 ? (
-                <div className="crm-alert crm-alert-warning">
-                  Create a company before adding tasks.
-                </div>
+                <Alert className="crm-alert crm-alert-warning border-amber-200 bg-amber-50/80 text-amber-700">
+                  <AlertDescription>Create a company before adding tasks.</AlertDescription>
+                </Alert>
               ) : (
                 <TaskForm
                   companies={companies}
@@ -1357,9 +1391,9 @@ function App() {
             isFormOpen={isTaskFormOpen}
             listContent={
               isLoadingTasks ? (
-                <div className="crm-empty-state">
-                  Loading tasks...
-                </div>
+                <Alert className="crm-empty-state border-slate-200 bg-slate-50/80 text-slate-600">
+                  <AlertDescription>Loading tasks...</AlertDescription>
+                </Alert>
               ) : (
                 <TaskList
                   completingTaskId={completingTaskId}
@@ -1378,13 +1412,16 @@ function App() {
             onRefresh={() =>
               loadTasks(selectedTaskCompany, selectedTaskStatus, showOverdueTasksOnly)
             }
-            title="Tasks"
-          />
-        ) : null}
+            panelDescription="Track open, completed, and overdue follow-ups."
+            panelTitle="Task board"
+            theme="tasks"
+            />
+          ) : null}
 
-        {activeSection === "dashboard" ? (
-          <Dashboard />
-        ) : null}
+          {activeSection === "dashboard" ? (
+            <Dashboard />
+          ) : null}
+        </div>
       </div>
     </main>
   );

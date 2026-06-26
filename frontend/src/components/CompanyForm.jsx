@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
 
+import CRMSelectField from "@/components/ui/crm-select-field";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+
 const emptyForm = {
   name: "",
   industry: "",
@@ -141,15 +147,15 @@ function CompanyForm({
 
   return (
     <form className="space-y-5" noValidate onSubmit={handleSubmit}>
-      <p className="crm-form-hint">
-        Fields marked with * are required.
-      </p>
+      <Alert className="crm-form-hint border-slate-200 bg-slate-50/80">
+        <AlertDescription>Fields marked with * are required.</AlertDescription>
+      </Alert>
 
       <div>
         <label className="crm-label" htmlFor="name">
           Company name *
         </label>
-        <input
+        <Input
           className={inputClassName("name")}
           id="name"
           name="name"
@@ -163,7 +169,7 @@ function CompanyForm({
         <label className="crm-label" htmlFor="industry">
           Industry *
         </label>
-        <input
+        <Input
           className={inputClassName("industry")}
           id="industry"
           name="industry"
@@ -179,19 +185,17 @@ function CompanyForm({
           <label className="crm-label" htmlFor="company_size">
             Company size *
           </label>
-          <select
-            className={inputClassName("company_size")}
-            id="company_size"
-            name="company_size"
-            onChange={handleChange}
+          <CRMSelectField
+            items={companySizeOptions.map((companySize) => ({
+              value: companySize,
+              label: companySize,
+            }))}
+            onValueChange={(value) =>
+              handleChange({ target: { name: "company_size", value } })
+            }
+            triggerClassName={inputClassName("company_size")}
             value={formData.company_size}
-          >
-            {companySizeOptions.map((companySize) => (
-              <option key={companySize} value={companySize}>
-                {companySize}
-              </option>
-            ))}
-          </select>
+          />
           {errors.company_size ? <p className="crm-error-text">{errors.company_size}</p> : null}
         </div>
 
@@ -199,19 +203,15 @@ function CompanyForm({
           <label className="crm-label" htmlFor="status">
             Status *
           </label>
-          <select
-            className={inputClassName("status")}
-            id="status"
-            name="status"
-            onChange={handleChange}
+          <CRMSelectField
+            items={statusOptions.map((status) => ({
+              value: status,
+              label: status,
+            }))}
+            onValueChange={(value) => handleChange({ target: { name: "status", value } })}
+            triggerClassName={inputClassName("status")}
             value={formData.status}
-          >
-            {statusOptions.map((status) => (
-              <option key={status} value={status}>
-                {status}
-              </option>
-            ))}
-          </select>
+          />
           {errors.status ? <p className="crm-error-text">{errors.status}</p> : null}
         </div>
       </div>
@@ -220,7 +220,7 @@ function CompanyForm({
         <label className="crm-label" htmlFor="website">
           Website *
         </label>
-        <input
+        <Input
           className={inputClassName("website")}
           id="website"
           name="website"
@@ -236,7 +236,7 @@ function CompanyForm({
           <label className="crm-label" htmlFor="phone">
             Phone
           </label>
-          <input
+          <Input
             className={`${baseFieldClassName} ${defaultFieldClassName}`}
             id="phone"
             name="phone"
@@ -250,7 +250,7 @@ function CompanyForm({
           <label className="crm-label" htmlFor="email">
             Email
           </label>
-          <input
+          <Input
             className={inputClassName("email")}
             id="email"
             inputMode="email"
@@ -267,7 +267,7 @@ function CompanyForm({
         <label className="crm-label" htmlFor="notes">
           Notes
         </label>
-        <textarea
+        <Textarea
           className={`min-h-32 resize-y ${baseFieldClassName} ${defaultFieldClassName}`}
           id="notes"
           name="notes"
@@ -278,22 +278,23 @@ function CompanyForm({
       </div>
 
       <div className="flex flex-wrap gap-3 pt-2">
-        <button
+        <Button
           className="crm-button crm-button-primary"
           disabled={isSubmitting}
           type="submit"
         >
           {isSubmitting ? "Saving..." : submitLabel}
-        </button>
+        </Button>
 
         {onCancel ? (
-          <button
+          <Button
             className="crm-button crm-button-secondary"
             onClick={onCancel}
             type="button"
+            variant="outline"
           >
             Cancel
-          </button>
+          </Button>
         ) : null}
       </div>
     </form>

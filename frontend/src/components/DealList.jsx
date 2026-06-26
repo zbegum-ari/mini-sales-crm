@@ -1,3 +1,8 @@
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+
 function formatCurrency(value) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -28,27 +33,29 @@ function dealStageClassName(stage) {
 
 function DealList({ deals, deletingDealId, emptyMessage, onDelete, onEdit }) {
   if (deals.length === 0) {
-    return <div className="crm-empty-state">{emptyMessage}</div>;
+    return (
+      <Alert className="crm-empty-state border-slate-200 bg-slate-50/80 text-slate-600">
+        <AlertDescription>{emptyMessage}</AlertDescription>
+      </Alert>
+    );
   }
 
   return (
     <div className="space-y-3">
       {deals.map((deal) => (
-        <article
-          className="crm-list-card"
-          key={deal.id}
-        >
+        <Card className="crm-list-card border-slate-200/90 py-0" key={deal.id}>
+          <CardContent className="px-5 py-4">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0 space-y-3">
               <div className="flex flex-wrap items-center gap-2.5">
                 <h3 className="text-lg font-semibold text-slate-900">{deal.title}</h3>
-                <span
+                <Badge
                   className={`crm-chip px-3 py-1 text-xs font-semibold ring-1 ${dealStageClassName(
                     deal.pipeline_stage,
                   )}`}
                 >
                   {deal.pipeline_stage}
-                </span>
+                </Badge>
               </div>
 
               <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-slate-600">
@@ -75,24 +82,29 @@ function DealList({ deals, deletingDealId, emptyMessage, onDelete, onEdit }) {
             </div>
 
             <div className="flex shrink-0 gap-2">
-              <button
+              <Button
                 className="crm-button crm-button-inline crm-button-secondary"
                 onClick={() => onEdit(deal)}
+                size="sm"
                 type="button"
+                variant="outline"
               >
                 Edit
-              </button>
-              <button
+              </Button>
+              <Button
                 className="crm-button crm-button-inline crm-button-danger"
                 disabled={deletingDealId === deal.id}
                 onClick={() => onDelete(deal)}
+                size="sm"
                 type="button"
+                variant="destructive"
               >
                 {deletingDealId === deal.id ? "Deleting..." : "Delete"}
-              </button>
+              </Button>
             </div>
           </div>
-        </article>
+          </CardContent>
+        </Card>
       ))}
     </div>
   );

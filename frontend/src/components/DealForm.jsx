@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
 
+import CRMSelectField from "@/components/ui/crm-select-field";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+
 const emptyForm = {
   company_id: "",
   title: "",
@@ -142,28 +148,26 @@ function DealForm({
 
   return (
     <form className="space-y-5" noValidate onSubmit={handleSubmit}>
-      <p className="crm-form-hint">
-        Fields marked with * are required.
-      </p>
+      <Alert className="crm-form-hint border-slate-200 bg-slate-50/80">
+        <AlertDescription>Fields marked with * are required.</AlertDescription>
+      </Alert>
 
       <div>
         <label className="crm-label" htmlFor="company_id">
           Company *
         </label>
-        <select
-          className={inputClassName("company_id")}
-          id="company_id"
-          name="company_id"
-          onChange={handleChange}
+        <CRMSelectField
+          items={[
+            { value: "", label: "Select a company", disabled: true },
+            ...companies.map((company) => ({
+              value: String(company.id),
+              label: company.name,
+            })),
+          ]}
+          onValueChange={(value) => handleChange({ target: { name: "company_id", value } })}
+          triggerClassName={inputClassName("company_id")}
           value={formData.company_id}
-        >
-          <option value="">Select a company</option>
-          {companies.map((company) => (
-            <option key={company.id} value={company.id}>
-              {company.name}
-            </option>
-          ))}
-        </select>
+        />
         {errors.company_id ? <p className="crm-error-text">{errors.company_id}</p> : null}
       </div>
 
@@ -171,7 +175,7 @@ function DealForm({
         <label className="crm-label" htmlFor="title">
           Deal title *
         </label>
-        <input
+        <Input
           className={inputClassName("title")}
           id="title"
           name="title"
@@ -187,7 +191,7 @@ function DealForm({
           <label className="crm-label" htmlFor="value">
             Deal value *
           </label>
-          <input
+          <Input
             className={inputClassName("value")}
             id="value"
             inputMode="decimal"
@@ -203,19 +207,17 @@ function DealForm({
           <label className="crm-label" htmlFor="pipeline_stage">
             Pipeline stage *
           </label>
-          <select
-            className={inputClassName("pipeline_stage")}
-            id="pipeline_stage"
-            name="pipeline_stage"
-            onChange={handleChange}
+          <CRMSelectField
+            items={stageOptions.map((stage) => ({
+              value: stage,
+              label: stage,
+            }))}
+            onValueChange={(value) =>
+              handleChange({ target: { name: "pipeline_stage", value } })
+            }
+            triggerClassName={inputClassName("pipeline_stage")}
             value={formData.pipeline_stage}
-          >
-            {stageOptions.map((stage) => (
-              <option key={stage} value={stage}>
-                {stage}
-              </option>
-            ))}
-          </select>
+          />
           {errors.pipeline_stage ? (
             <p className="crm-error-text">{errors.pipeline_stage}</p>
           ) : null}
@@ -226,7 +228,7 @@ function DealForm({
         <label className="crm-label" htmlFor="expected_close_date">
           Expected close date *
         </label>
-        <input
+        <Input
           className={inputClassName("expected_close_date")}
           id="expected_close_date"
           name="expected_close_date"
@@ -243,7 +245,7 @@ function DealForm({
         <label className="crm-label" htmlFor="notes">
           Notes
         </label>
-        <textarea
+        <Textarea
           className={`min-h-32 resize-y ${baseFieldClassName} ${defaultFieldClassName}`}
           id="notes"
           name="notes"
@@ -254,22 +256,23 @@ function DealForm({
       </div>
 
       <div className="flex flex-wrap gap-3 pt-2">
-        <button
+        <Button
           className="crm-button crm-button-primary"
           disabled={isSubmitting}
           type="submit"
         >
           {isSubmitting ? "Saving..." : submitLabel}
-        </button>
+        </Button>
 
         {onCancel ? (
-          <button
+          <Button
             className="crm-button crm-button-secondary"
             onClick={onCancel}
             type="button"
+            variant="outline"
           >
             Cancel
-          </button>
+          </Button>
         ) : null}
       </div>
     </form>
