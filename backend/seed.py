@@ -2,11 +2,60 @@ from datetime import date, timedelta
 
 import app.models  # noqa: F401
 from app.core.database import Base, SessionLocal, engine, run_startup_migrations
+from app.core.security import hash_password, normalize_email
 from app.models.activity import Activity
 from app.models.company import Company
 from app.models.contact import Contact
 from app.models.deal import Deal
+from app.models.organization import Organization
 from app.models.task import Task
+from app.models.user import User
+
+PLATFORM_ADMIN_EMAIL = "platform.admin@example.com"
+PLATFORM_ADMIN_PASSWORD = "ChangeMe123!"
+
+
+def get_or_create_organization(db, organization_data):
+    organization = (
+        db.query(Organization).filter(Organization.name == organization_data["name"]).first()
+    )
+    if organization:
+        return organization
+
+    organization = Organization(**organization_data)
+    db.add(organization)
+    db.flush()
+    return organization
+
+
+def get_or_create_platform_admin(db):
+    email = normalize_email(PLATFORM_ADMIN_EMAIL)
+    user = db.query(User).filter(User.role == "platform_admin").first()
+
+    if user is None:
+        user = db.query(User).filter(User.email == email).first()
+
+    if user:
+        user.name = "Platform Admin"
+        user.email = email
+        user.organization_id = None
+        user.role = "platform_admin"
+        user.is_active = True
+        user.password_hash = hash_password(PLATFORM_ADMIN_PASSWORD)
+        db.flush()
+        return user
+
+    user = User(
+        organization_id=None,
+        name="Platform Admin",
+        email=email,
+        password_hash=hash_password(PLATFORM_ADMIN_PASSWORD),
+        role="platform_admin",
+        is_active=True,
+    )
+    db.add(user)
+    db.flush()
+    return user
 
 
 def get_or_create_company(db, company_data):
@@ -89,6 +138,15 @@ def seed():
     db = SessionLocal()
 
     try:
+        get_or_create_organization(
+            db,
+            {
+                "name": "Demo Organization",
+                "status": "active",
+            },
+        )
+        get_or_create_platform_admin(db)
+
         companies = {
             "BeeEdu": get_or_create_company(
                 db,
@@ -282,6 +340,8 @@ def seed():
 
         db.commit()
         print("Seed data is ready.")
+        print(f"Platform admin email: {PLATFORM_ADMIN_EMAIL}")
+        print(f"Platform admin password: {PLATFORM_ADMIN_PASSWORD}")
     except Exception:
         db.rollback()
         raise

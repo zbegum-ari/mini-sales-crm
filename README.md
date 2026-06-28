@@ -119,6 +119,37 @@ The frontend runs on `http://localhost:5173`.
 - Backend health: [http://localhost:8000/health](http://localhost:8000/health)
 - API docs: [http://localhost:8000/docs](http://localhost:8000/docs)
 
+## V2 Auth Foundation Note
+
+On the `v2-auth-multitenant` branch, the backend now uses a separate SQLite database:
+
+- `backend/crm_v2.db`
+
+This keeps the v2 auth and organization foundation separate from the old v1 `crm.db`.
+
+### Create the platform admin
+
+Run the seed script:
+
+```bash
+cd mini-sales-crm/backend
+source ../.venv/bin/activate
+python seed.py
+```
+
+The script creates or refreshes a platform admin with these placeholder credentials:
+
+- Email: `platform.admin@example.com`
+- Password: `ChangeMe123!`
+
+### Auth endpoints
+
+- `POST /auth/login`
+- `GET /auth/me`
+
+`/auth/login` returns a bearer access token and basic user info.  
+`/auth/me` expects `Authorization: Bearer <token>`.
+
 ## Seed Sample Data
 
 If you want a quick local demo dataset:

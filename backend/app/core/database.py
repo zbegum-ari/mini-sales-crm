@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-DATABASE_URL = "sqlite:///./crm.db"
+DATABASE_URL = "sqlite:///./crm_v2.db"
 
 engine = create_engine(
     DATABASE_URL,
