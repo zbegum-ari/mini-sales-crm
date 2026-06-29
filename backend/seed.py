@@ -40,6 +40,7 @@ def get_or_create_platform_admin(db):
         user.email = email
         user.organization_id = None
         user.role = "platform_admin"
+        user.status = "active"
         user.is_active = True
         user.password_hash = hash_password(PLATFORM_ADMIN_PASSWORD)
         db.flush()
@@ -51,6 +52,7 @@ def get_or_create_platform_admin(db):
         email=email,
         password_hash=hash_password(PLATFORM_ADMIN_PASSWORD),
         role="platform_admin",
+        status="active",
         is_active=True,
     )
     db.add(user)
@@ -59,7 +61,14 @@ def get_or_create_platform_admin(db):
 
 
 def get_or_create_company(db, company_data):
-    company = db.query(Company).filter(Company.name == company_data["name"]).first()
+    company = (
+        db.query(Company)
+        .filter(
+            Company.organization_id == company_data["organization_id"],
+            Company.name == company_data["name"],
+        )
+        .first()
+    )
     if company:
         return company
 
@@ -70,7 +79,14 @@ def get_or_create_company(db, company_data):
 
 
 def get_or_create_contact(db, contact_data):
-    contact = db.query(Contact).filter(Contact.email == contact_data["email"]).first()
+    contact = (
+        db.query(Contact)
+        .filter(
+            Contact.organization_id == contact_data["organization_id"],
+            Contact.email == contact_data["email"],
+        )
+        .first()
+    )
     if contact:
         return contact
 
@@ -83,7 +99,11 @@ def get_or_create_contact(db, contact_data):
 def get_or_create_deal(db, deal_data):
     deal = (
         db.query(Deal)
-        .filter(Deal.company_id == deal_data["company_id"], Deal.title == deal_data["title"])
+        .filter(
+            Deal.organization_id == deal_data["organization_id"],
+            Deal.company_id == deal_data["company_id"],
+            Deal.title == deal_data["title"],
+        )
         .first()
     )
     if deal:
@@ -99,6 +119,7 @@ def get_or_create_activity(db, activity_data):
     activity = (
         db.query(Activity)
         .filter(
+            Activity.organization_id == activity_data["organization_id"],
             Activity.company_id == activity_data["company_id"],
             Activity.deal_id == activity_data["deal_id"],
             Activity.activity_type == activity_data["activity_type"],
@@ -118,7 +139,11 @@ def get_or_create_activity(db, activity_data):
 def get_or_create_task(db, task_data):
     task = (
         db.query(Task)
-        .filter(Task.company_id == task_data["company_id"], Task.title == task_data["title"])
+        .filter(
+            Task.organization_id == task_data["organization_id"],
+            Task.company_id == task_data["company_id"],
+            Task.title == task_data["title"],
+        )
         .first()
     )
     if task:
@@ -138,7 +163,7 @@ def seed():
     db = SessionLocal()
 
     try:
-        get_or_create_organization(
+        demo_organization = get_or_create_organization(
             db,
             {
                 "name": "Demo Organization",
@@ -151,6 +176,7 @@ def seed():
             "BeeEdu": get_or_create_company(
                 db,
                 {
+                    "organization_id": demo_organization.id,
                     "name": "BeeEdu",
                     "industry": "Education Technology",
                     "company_size": "11-50",
@@ -164,6 +190,7 @@ def seed():
             "Northwind Retail": get_or_create_company(
                 db,
                 {
+                    "organization_id": demo_organization.id,
                     "name": "Northwind Retail",
                     "industry": "Retail",
                     "company_size": "51-200",
@@ -177,6 +204,7 @@ def seed():
             "Atlas Labs": get_or_create_company(
                 db,
                 {
+                    "organization_id": demo_organization.id,
                     "name": "Atlas Labs",
                     "industry": "Healthcare",
                     "company_size": "201-500",
@@ -192,6 +220,7 @@ def seed():
         get_or_create_contact(
             db,
             {
+                "organization_id": demo_organization.id,
                 "company_id": companies["BeeEdu"].id,
                 "first_name": "Aylin",
                 "last_name": "Demir",
@@ -204,6 +233,7 @@ def seed():
         get_or_create_contact(
             db,
             {
+                "organization_id": demo_organization.id,
                 "company_id": companies["Northwind Retail"].id,
                 "first_name": "Kerem",
                 "last_name": "Yildiz",
@@ -216,6 +246,7 @@ def seed():
         get_or_create_contact(
             db,
             {
+                "organization_id": demo_organization.id,
                 "company_id": companies["Atlas Labs"].id,
                 "first_name": "Selin",
                 "last_name": "Kaya",
@@ -230,6 +261,7 @@ def seed():
             "BeeEdu - Helpdesk rollout": get_or_create_deal(
                 db,
                 {
+                    "organization_id": demo_organization.id,
                     "company_id": companies["BeeEdu"].id,
                     "title": "Helpdesk rollout",
                     "value": 12500,
@@ -241,6 +273,7 @@ def seed():
             "Northwind Retail - Analytics package": get_or_create_deal(
                 db,
                 {
+                    "organization_id": demo_organization.id,
                     "company_id": companies["Northwind Retail"].id,
                     "title": "Analytics package",
                     "value": 22000,
@@ -252,6 +285,7 @@ def seed():
             "Atlas Labs - Renewal expansion": get_or_create_deal(
                 db,
                 {
+                    "organization_id": demo_organization.id,
                     "company_id": companies["Atlas Labs"].id,
                     "title": "Renewal expansion",
                     "value": 18000,
@@ -263,6 +297,7 @@ def seed():
             "BeeEdu - Legacy migration": get_or_create_deal(
                 db,
                 {
+                    "organization_id": demo_organization.id,
                     "company_id": companies["BeeEdu"].id,
                     "title": "Legacy migration",
                     "value": 9000,
@@ -276,6 +311,7 @@ def seed():
         get_or_create_activity(
             db,
             {
+                "organization_id": demo_organization.id,
                 "company_id": companies["BeeEdu"].id,
                 "deal_id": deals["BeeEdu - Helpdesk rollout"].id,
                 "activity_type": "Meeting",
@@ -286,6 +322,7 @@ def seed():
         get_or_create_activity(
             db,
             {
+                "organization_id": demo_organization.id,
                 "company_id": companies["Northwind Retail"].id,
                 "deal_id": deals["Northwind Retail - Analytics package"].id,
                 "activity_type": "Call",
@@ -296,6 +333,7 @@ def seed():
         get_or_create_activity(
             db,
             {
+                "organization_id": demo_organization.id,
                 "company_id": companies["Atlas Labs"].id,
                 "deal_id": None,
                 "activity_type": "Note",
@@ -307,6 +345,7 @@ def seed():
         get_or_create_task(
             db,
             {
+                "organization_id": demo_organization.id,
                 "company_id": companies["BeeEdu"].id,
                 "deal_id": deals["BeeEdu - Helpdesk rollout"].id,
                 "title": "Send revised proposal",
@@ -318,6 +357,7 @@ def seed():
         get_or_create_task(
             db,
             {
+                "organization_id": demo_organization.id,
                 "company_id": companies["Northwind Retail"].id,
                 "deal_id": deals["Northwind Retail - Analytics package"].id,
                 "title": "Follow up on contract review",
@@ -329,6 +369,7 @@ def seed():
         get_or_create_task(
             db,
             {
+                "organization_id": demo_organization.id,
                 "company_id": companies["Atlas Labs"].id,
                 "deal_id": deals["Atlas Labs - Renewal expansion"].id,
                 "title": "Schedule onboarding kickoff",

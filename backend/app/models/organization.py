@@ -9,7 +9,10 @@ from app.core.database import Base
 class Organization(Base):
     __tablename__ = "organizations"
     __table_args__ = (
-        CheckConstraint("status IN ('active', 'inactive')", name="organizations_status_check"),
+        CheckConstraint(
+            "status IN ('pending', 'active', 'rejected', 'inactive')",
+            name="organizations_status_check",
+        ),
     )
 
     id = Column(Integer, primary_key=True, index=True)

@@ -1,4 +1,5 @@
 const API_BASE_URL = "http://localhost:8000";
+const ACCESS_TOKEN_KEY = "mini-sales-crm-access-token";
 
 function getErrorMessage(data) {
   if (Array.isArray(data?.detail)) {
@@ -15,9 +16,11 @@ function getErrorMessage(data) {
 }
 
 async function request(path, options = {}) {
+  const accessToken = getAccessToken();
   const response = await fetch(`${API_BASE_URL}${path}`, {
     headers: {
       "Content-Type": "application/json",
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       ...(options.headers || {}),
     },
     ...options,
@@ -36,8 +39,78 @@ async function request(path, options = {}) {
   return data;
 }
 
+export function getAccessToken() {
+  return localStorage.getItem(ACCESS_TOKEN_KEY);
+}
+
+export function setAccessToken(token) {
+  localStorage.setItem(ACCESS_TOKEN_KEY, token);
+}
+
+export function clearAccessToken() {
+  localStorage.removeItem(ACCESS_TOKEN_KEY);
+}
+
 export function checkHealth() {
   return request("/health");
+}
+
+export function loginUser(credentials) {
+  return request("/auth/login", {
+    method: "POST",
+    body: JSON.stringify(credentials),
+  });
+}
+
+export function registerUser(payload) {
+  return request("/auth/register", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function getPendingManagers() {
+  return request("/platform/pending-managers");
+}
+
+export function approveOrganization(organizationId) {
+  return request(`/platform/organizations/${organizationId}/approve`, {
+    method: "POST",
+  });
+}
+
+export function rejectOrganization(organizationId) {
+  return request(`/platform/organizations/${organizationId}/reject`, {
+    method: "POST",
+  });
+}
+
+export function getOrganizations() {
+  return request("/platform/organizations");
+}
+
+export function getPendingEmployees() {
+  return request("/team/pending-employees");
+}
+
+export function approveTeamUser(userId) {
+  return request(`/team/users/${userId}/approve`, {
+    method: "POST",
+  });
+}
+
+export function rejectTeamUser(userId) {
+  return request(`/team/users/${userId}/reject`, {
+    method: "POST",
+  });
+}
+
+export function getTeamUsers() {
+  return request("/team/users");
+}
+
+export function getCurrentUser() {
+  return request("/auth/me");
 }
 
 export function getCompanies() {

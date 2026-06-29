@@ -11,7 +11,9 @@ from app.api.routes.contacts import router as contacts_router
 from app.api.routes.dashboard import router as dashboard_router
 from app.api.routes.deals import router as deals_router
 from app.api.routes.health import router as health_router
+from app.api.routes.platform import router as platform_router
 from app.api.routes.tasks import router as tasks_router
+from app.api.routes.team import router as team_router
 from app.core.database import Base, engine, run_startup_migrations
 
 
@@ -40,3 +42,5 @@ app.include_router(deals_router)
 app.include_router(activities_router)
 app.include_router(tasks_router)
 app.include_router(dashboard_router)
+app.include_router(platform_router)
+app.include_router(team_router)

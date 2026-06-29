@@ -9,8 +9,11 @@ import ContactList from "./components/ContactList";
 import DealForm from "./components/DealForm";
 import DealList from "./components/DealList";
 import Dashboard from "./components/Dashboard";
+import LoginForm from "./components/LoginForm";
+import PlatformAdminPanel from "./components/PlatformAdminPanel";
 import TaskForm from "./components/TaskForm";
 import TaskList from "./components/TaskList";
+import TeamPanel from "./components/TeamPanel";
 import konvoLogo from "./assets/konvo-logo.png";
 import { Badge } from "./components/ui/badge";
 import CRMSelectField from "./components/ui/crm-select-field";
@@ -20,6 +23,7 @@ import { Card, CardContent } from "./components/ui/card";
 import { Input } from "./components/ui/input";
 import {
   checkHealth,
+  clearAccessToken,
   createActivity,
   createCompany,
   createContact,
@@ -30,11 +34,24 @@ import {
   deleteContact,
   deleteDeal,
   deleteTask,
+  getAccessToken,
   getActivities,
   getDeals,
   getCompanies,
   getContacts,
+  getCurrentUser,
+  getOrganizations,
+  getPendingEmployees,
+  getPendingManagers,
   getTasks,
+  getTeamUsers,
+  loginUser,
+  approveOrganization,
+  approveTeamUser,
+  rejectOrganization,
+  rejectTeamUser,
+  registerUser,
+  setAccessToken,
   updateActivity,
   updateCompany,
   updateContact,
@@ -47,7 +64,7 @@ const dealStageOptions = ["All", "Lead", "Qualified", "Proposal", "Negotiation",
 const activityTypeOptions = ["All", "Note", "Call", "Meeting", "Email", "Follow-up"];
 const taskStatusOptions = ["All", "Open", "Completed", "Cancelled"];
 const allCompaniesValue = "all";
-const sections = [
+const crmSections = [
   { id: "companies", label: "Companies" },
   { id: "contacts", label: "Contacts" },
   { id: "deals", label: "Deals" },
@@ -80,7 +97,27 @@ const sectionMeta = {
     title: "Dashboard",
     description: "Review key CRM totals, pipeline value, and task health in one place.",
   },
+  platform: {
+    title: "Platform Admin",
+    description: "Approve company managers and review workspace requests across Konvo.",
+  },
+  team: {
+    title: "Team",
+    description: "Approve employee requests and review users in your company workspace.",
+  },
 };
+
+function getSectionsForRole(role) {
+  if (role === "platform_admin") {
+    return [{ id: "platform", label: "Platform Admin" }, ...crmSections];
+  }
+
+  if (role === "org_admin") {
+    return [...crmSections, { id: "team", label: "Team" }];
+  }
+
+  return crmSections;
+}
 
 function getStatusBadge(isConnected, status) {
   if (isConnected) {
@@ -106,7 +143,20 @@ function getStatusBadge(isConnected, status) {
   };
 }
 
-function AppSidebar({ activeSection, sections, onSectionChange }) {
+function StatusBadge({ isConnected, status }) {
+  const badge = getStatusBadge(isConnected, status);
+
+  return (
+    <Badge
+      className={`inline-flex h-auto items-center gap-2 self-start rounded-full border px-3 py-1.5 text-xs font-semibold shadow-sm ${badge.className}`}
+    >
+      <span className={`h-2 w-2 rounded-full ${badge.dotClassName}`} />
+      {badge.label}
+    </Badge>
+  );
+}
+
+function AppSidebar({ activeSection, currentUser, onLogout, onSectionChange, sections }) {
   const [showLogoFallback, setShowLogoFallback] = useState(false);
 
   return (
@@ -149,13 +199,31 @@ function AppSidebar({ activeSection, sections, onSectionChange }) {
           </button>
         ))}
       </nav>
+
+      <div className="border-t border-slate-200/90 px-5 py-5 sm:px-6">
+        <div className="rounded-2xl border border-slate-200/90 bg-white/88 px-4 py-4 shadow-sm">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+            Signed in as
+          </p>
+          <p className="mt-2 text-sm font-semibold text-slate-950">{currentUser.name}</p>
+          <p className="mt-1 text-sm text-slate-500">{currentUser.role}</p>
+
+          <Button
+            className="crm-button crm-button-secondary mt-4 w-full"
+            onClick={onLogout}
+            type="button"
+            variant="outline"
+          >
+            Logout
+          </Button>
+        </div>
+      </div>
     </Card>
   );
 }
 
 function MainContentHeader({ activeSection, isConnected, status }) {
   const activeMeta = sectionMeta[activeSection];
-  const badge = getStatusBadge(isConnected, status);
 
   return (
     <Card className={`crm-page-surface crm-content-header crm-theme-${activeSection} py-0`}>
@@ -173,12 +241,7 @@ function MainContentHeader({ activeSection, isConnected, status }) {
             </p>
           </div>
 
-          <Badge
-            className={`inline-flex h-auto items-center gap-2 self-start rounded-full border px-3 py-1.5 text-xs font-semibold shadow-sm ${badge.className}`}
-          >
-            <span className={`h-2 w-2 rounded-full ${badge.dotClassName}`} />
-            {badge.label}
-          </Badge>
+          <StatusBadge isConnected={isConnected} status={status} />
         </div>
       </CardContent>
     </Card>
@@ -199,6 +262,7 @@ function ModuleSection({
   onRefresh,
   panelDescription,
   panelTitle,
+  showPrimaryAction = true,
   theme,
 }) {
   return (
@@ -229,20 +293,22 @@ function ModuleSection({
                   </Button>
                 ) : null}
 
-                <Button
-                  className="crm-button crm-button-primary crm-button-module"
-                  onClick={onPrimaryAction}
-                  type="button"
-                >
-                  {actionLabel}
-                </Button>
+                {showPrimaryAction ? (
+                  <Button
+                    className="crm-button crm-button-primary crm-button-module"
+                    onClick={onPrimaryAction}
+                    type="button"
+                  >
+                    {actionLabel}
+                  </Button>
+                ) : null}
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {isFormOpen ? (
+      {showPrimaryAction && isFormOpen ? (
         <Card className="crm-page-surface crm-module-form-panel py-0">
           <CardContent className="px-5 py-5 sm:px-6">
             <div className="flex flex-col gap-3 border-b border-slate-200 pb-4 sm:flex-row sm:items-start sm:justify-between">
@@ -291,6 +357,11 @@ function ModuleSection({
 function App() {
   const [status, setStatus] = useState("Checking backend...");
   const [isConnected, setIsConnected] = useState(false);
+  const [authStatus, setAuthStatus] = useState("checking");
+  const [currentUser, setCurrentUser] = useState(null);
+  const [authError, setAuthError] = useState("");
+  const [authNotice, setAuthNotice] = useState("");
+  const [isSubmittingAuth, setIsSubmittingAuth] = useState(false);
   const [activeSection, setActiveSection] = useState("companies");
   const [companies, setCompanies] = useState([]);
   const [isLoadingCompanies, setIsLoadingCompanies] = useState(true);
@@ -344,6 +415,18 @@ function App() {
   const [selectedTaskCompany, setSelectedTaskCompany] = useState(allCompaniesValue);
   const [selectedTaskStatus, setSelectedTaskStatus] = useState("All");
   const [showOverdueTasksOnly, setShowOverdueTasksOnly] = useState(false);
+  const [pendingManagers, setPendingManagers] = useState([]);
+  const [organizations, setOrganizations] = useState([]);
+  const [platformError, setPlatformError] = useState("");
+  const [isLoadingPlatform, setIsLoadingPlatform] = useState(true);
+  const [approvingOrganizationId, setApprovingOrganizationId] = useState(null);
+  const [rejectingOrganizationId, setRejectingOrganizationId] = useState(null);
+  const [pendingEmployees, setPendingEmployees] = useState([]);
+  const [teamUsers, setTeamUsers] = useState([]);
+  const [teamError, setTeamError] = useState("");
+  const [isLoadingTeam, setIsLoadingTeam] = useState(true);
+  const [approvingTeamUserId, setApprovingTeamUserId] = useState(null);
+  const [rejectingTeamUserId, setRejectingTeamUserId] = useState(null);
 
   useEffect(() => {
     async function checkBackend() {
@@ -366,25 +449,155 @@ function App() {
   }, []);
 
   useEffect(() => {
-    loadCompanies();
-    loadAllDeals();
+    async function restoreSession() {
+      const accessToken = getAccessToken();
+
+      if (!accessToken) {
+        setAuthStatus("unauthenticated");
+        return;
+      }
+
+      try {
+        const user = await getCurrentUser();
+        setCurrentUser(user);
+        setActiveSection(user.role === "platform_admin" ? "platform" : "companies");
+        setAuthStatus("authenticated");
+      } catch {
+        clearAccessToken();
+        setCurrentUser(null);
+        setAuthStatus("unauthenticated");
+      }
+    }
+
+    restoreSession();
   }, []);
 
   useEffect(() => {
+    if (authStatus !== "authenticated") {
+      return;
+    }
+
+    loadCompanies();
+    loadAllDeals();
+  }, [authStatus]);
+
+  useEffect(() => {
+    if (authStatus !== "authenticated") {
+      return;
+    }
+
     loadContacts(selectedContactCompany);
-  }, [selectedContactCompany]);
+  }, [authStatus, selectedContactCompany]);
 
   useEffect(() => {
+    if (authStatus !== "authenticated") {
+      return;
+    }
+
     loadDeals(selectedDealStage);
-  }, [selectedDealStage]);
+  }, [authStatus, selectedDealStage]);
 
   useEffect(() => {
+    if (authStatus !== "authenticated") {
+      return;
+    }
+
     loadActivities(selectedActivityCompany, selectedActivityType);
-  }, [selectedActivityCompany, selectedActivityType]);
+  }, [authStatus, selectedActivityCompany, selectedActivityType]);
 
   useEffect(() => {
+    if (authStatus !== "authenticated") {
+      return;
+    }
+
     loadTasks(selectedTaskCompany, selectedTaskStatus, showOverdueTasksOnly);
-  }, [selectedTaskCompany, selectedTaskStatus, showOverdueTasksOnly]);
+  }, [authStatus, selectedTaskCompany, selectedTaskStatus, showOverdueTasksOnly]);
+
+  useEffect(() => {
+    if (authStatus !== "authenticated" || !currentUser) {
+      return;
+    }
+
+    if (currentUser.role === "platform_admin") {
+      loadPlatformData();
+      return;
+    }
+
+    if (currentUser.role === "org_admin") {
+      loadTeamData();
+    }
+  }, [authStatus, currentUser]);
+
+  useEffect(() => {
+    if (!currentUser) {
+      return;
+    }
+
+    const allowedSectionIds = new Set(getSectionsForRole(currentUser.role).map((section) => section.id));
+    if (!allowedSectionIds.has(activeSection)) {
+      setActiveSection(currentUser.role === "platform_admin" ? "platform" : "companies");
+    }
+  }, [activeSection, currentUser]);
+
+  async function handleLogin(credentials) {
+    setIsSubmittingAuth(true);
+    setAuthError("");
+    setAuthNotice("");
+
+    try {
+      const response = await loginUser(credentials);
+      setAccessToken(response.access_token);
+      setCurrentUser(response.user);
+      setActiveSection(response.user.role === "platform_admin" ? "platform" : "companies");
+      setAuthStatus("authenticated");
+      return true;
+    } catch (error) {
+      clearAccessToken();
+      setCurrentUser(null);
+      setAuthStatus("unauthenticated");
+      setAuthError(error.message || "Could not log in");
+      return false;
+    } finally {
+      setIsSubmittingAuth(false);
+    }
+  }
+
+  async function handleRegister(payload) {
+    setIsSubmittingAuth(true);
+    setAuthError("");
+    setAuthNotice("");
+
+    try {
+      const response = await registerUser(payload);
+      clearAccessToken();
+      setCurrentUser(null);
+      setAuthStatus("unauthenticated");
+      setAuthNotice(response.message);
+      return { success: true };
+    } catch (error) {
+      clearAccessToken();
+      setCurrentUser(null);
+      setAuthStatus("unauthenticated");
+      setAuthError(error.message || "Could not create account");
+      return false;
+    } finally {
+      setIsSubmittingAuth(false);
+    }
+  }
+
+  function handleLogout() {
+    clearAccessToken();
+    setCurrentUser(null);
+    setAuthError("");
+    setAuthNotice("");
+    setAuthStatus("unauthenticated");
+    setActiveSection("companies");
+  }
+
+  function handleAuthModeChange() {
+    setAuthError("");
+    setAuthNotice("");
+  }
 
   async function loadCompanies() {
     setIsLoadingCompanies(true);
@@ -478,6 +691,39 @@ function App() {
       setTasksError(error.message || "Could not load tasks");
     } finally {
       setIsLoadingTasks(false);
+    }
+  }
+
+  async function loadPlatformData() {
+    setIsLoadingPlatform(true);
+    setPlatformError("");
+
+    try {
+      const [pending, organizationList] = await Promise.all([
+        getPendingManagers(),
+        getOrganizations(),
+      ]);
+      setPendingManagers(pending);
+      setOrganizations(organizationList);
+    } catch (error) {
+      setPlatformError(error.message || "Could not load platform admin data");
+    } finally {
+      setIsLoadingPlatform(false);
+    }
+  }
+
+  async function loadTeamData() {
+    setIsLoadingTeam(true);
+    setTeamError("");
+
+    try {
+      const [pending, users] = await Promise.all([getPendingEmployees(), getTeamUsers()]);
+      setPendingEmployees(pending);
+      setTeamUsers(users);
+    } catch (error) {
+      setTeamError(error.message || "Could not load team data");
+    } finally {
+      setIsLoadingTeam(false);
     }
   }
 
@@ -950,6 +1196,62 @@ function App() {
     }
   }
 
+  async function handleApproveOrganization(organizationId) {
+    setApprovingOrganizationId(organizationId);
+    setPlatformError("");
+
+    try {
+      await approveOrganization(organizationId);
+      await loadPlatformData();
+    } catch (error) {
+      setPlatformError(error.message || "Could not approve organization");
+    } finally {
+      setApprovingOrganizationId(null);
+    }
+  }
+
+  async function handleRejectOrganization(organizationId) {
+    setRejectingOrganizationId(organizationId);
+    setPlatformError("");
+
+    try {
+      await rejectOrganization(organizationId);
+      await loadPlatformData();
+    } catch (error) {
+      setPlatformError(error.message || "Could not reject organization");
+    } finally {
+      setRejectingOrganizationId(null);
+    }
+  }
+
+  async function handleApproveTeamUser(userId) {
+    setApprovingTeamUserId(userId);
+    setTeamError("");
+
+    try {
+      await approveTeamUser(userId);
+      await loadTeamData();
+    } catch (error) {
+      setTeamError(error.message || "Could not approve user");
+    } finally {
+      setApprovingTeamUserId(null);
+    }
+  }
+
+  async function handleRejectTeamUser(userId) {
+    setRejectingTeamUserId(userId);
+    setTeamError("");
+
+    try {
+      await rejectTeamUser(userId);
+      await loadTeamData();
+    } catch (error) {
+      setTeamError(error.message || "Could not reject user");
+    } finally {
+      setRejectingTeamUserId(null);
+    }
+  }
+
   function handleEditCompany(company) {
     setEditingCompany(company);
     setCompanyFormError("");
@@ -1038,6 +1340,57 @@ function App() {
       : selectedTaskCompany === allCompaniesValue && selectedTaskStatus === "All"
         ? "No tasks yet. Add your first task."
         : "No tasks found for the selected filters.";
+  const sections = currentUser ? getSectionsForRole(currentUser.role) : crmSections;
+
+  if (authStatus === "checking") {
+    return (
+      <main className="crm-app-shell relative min-h-screen overflow-x-hidden px-4 py-6 sm:px-6 lg:px-8">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-80 overflow-hidden">
+          <div className="crm-bg-orb crm-bg-orb-primary absolute left-[6%] top-0 h-64 w-64 rounded-full blur-3xl" />
+          <div className="crm-bg-orb crm-bg-orb-secondary absolute right-[10%] top-8 h-56 w-56 rounded-full blur-3xl" />
+          <div className="crm-bg-orb crm-bg-orb-tertiary absolute left-1/2 top-28 h-44 w-44 -translate-x-1/2 rounded-full blur-3xl" />
+        </div>
+
+        <div className="relative mx-auto flex min-h-screen max-w-[1320px] items-center justify-center">
+          <Card className="crm-page-surface crm-theme-dashboard w-full max-w-xl py-0">
+            <CardContent className="px-6 py-6 text-center sm:px-8">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-blue-700">
+                Mini Sales CRM v2
+              </p>
+              <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
+                Checking your session
+              </h1>
+              <p className="mt-3 text-sm leading-6 text-slate-500">
+                Verifying saved login details before opening the CRM workspace.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+    );
+  }
+
+  if (authStatus !== "authenticated" || !currentUser) {
+    return (
+      <main className="crm-app-shell relative min-h-screen overflow-x-hidden">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-80 overflow-hidden">
+          <div className="crm-bg-orb crm-bg-orb-primary absolute left-[6%] top-0 h-64 w-64 rounded-full blur-3xl" />
+          <div className="crm-bg-orb crm-bg-orb-secondary absolute right-[10%] top-8 h-56 w-56 rounded-full blur-3xl" />
+          <div className="crm-bg-orb crm-bg-orb-tertiary absolute left-1/2 top-28 h-44 w-44 -translate-x-1/2 rounded-full blur-3xl" />
+        </div>
+
+        <LoginForm
+          errorMessage={authError}
+          isSubmitting={isSubmittingAuth}
+          noticeMessage={authNotice}
+          onLogin={handleLogin}
+          onModeChange={handleAuthModeChange}
+          onRegister={handleRegister}
+          statusBadge={getStatusBadge(isConnected, status)}
+        />
+      </main>
+    );
+  }
 
   return (
     <main className={`crm-app-shell crm-theme-${activeSection} relative min-h-screen overflow-x-hidden px-4 py-6 sm:px-6 lg:px-8`}>
@@ -1051,6 +1404,8 @@ function App() {
         <div className="crm-sidebar-shell">
           <AppSidebar
             activeSection={activeSection}
+            currentUser={currentUser}
+            onLogout={handleLogout}
             sections={sections}
             onSectionChange={setActiveSection}
           />
@@ -1062,6 +1417,74 @@ function App() {
             isConnected={isConnected}
             status={status}
           />
+
+          {activeSection === "platform" ? (
+            <ModuleSection
+              controls={null}
+              formContent={null}
+              formError=""
+              formTitle=""
+              isFormOpen={false}
+              listContent={
+                isLoadingPlatform ? (
+                  <Alert className="crm-empty-state border-slate-200 bg-slate-50/80 text-slate-600">
+                    <AlertDescription>Loading platform admin data...</AlertDescription>
+                  </Alert>
+                ) : (
+                  <PlatformAdminPanel
+                    approvingOrganizationId={approvingOrganizationId}
+                    onApprove={handleApproveOrganization}
+                    onReject={handleRejectOrganization}
+                    organizations={organizations}
+                    pendingManagers={pendingManagers}
+                    rejectingOrganizationId={rejectingOrganizationId}
+                  />
+                )
+              }
+              listError={platformError}
+              onCloseForm={() => {}}
+              onPrimaryAction={() => {}}
+              onRefresh={loadPlatformData}
+              panelDescription="Approve company manager requests and review workspaces across the platform."
+              panelTitle="Platform approvals"
+              showPrimaryAction={false}
+              theme="dashboard"
+            />
+          ) : null}
+
+          {activeSection === "team" ? (
+            <ModuleSection
+              controls={null}
+              formContent={null}
+              formError=""
+              formTitle=""
+              isFormOpen={false}
+              listContent={
+                isLoadingTeam ? (
+                  <Alert className="crm-empty-state border-slate-200 bg-slate-50/80 text-slate-600">
+                    <AlertDescription>Loading team data...</AlertDescription>
+                  </Alert>
+                ) : (
+                  <TeamPanel
+                    approvingUserId={approvingTeamUserId}
+                    onApprove={handleApproveTeamUser}
+                    onReject={handleRejectTeamUser}
+                    pendingEmployees={pendingEmployees}
+                    rejectingUserId={rejectingTeamUserId}
+                    teamUsers={teamUsers}
+                  />
+                )
+              }
+              listError={teamError}
+              onCloseForm={() => {}}
+              onPrimaryAction={() => {}}
+              onRefresh={loadTeamData}
+              panelDescription="Approve employees and review users in your company workspace."
+              panelTitle="Team approvals"
+              showPrimaryAction={false}
+              theme="contacts"
+            />
+          ) : null}
 
           {activeSection === "companies" ? (
             <ModuleSection

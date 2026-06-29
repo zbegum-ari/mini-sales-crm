@@ -18,6 +18,10 @@ class User(Base):
             "OR (role IN ('org_admin', 'user') AND organization_id IS NOT NULL)",
             name="users_role_organization_check",
         ),
+        CheckConstraint(
+            "status IN ('pending', 'active', 'rejected', 'inactive')",
+            name="users_status_check",
+        ),
     )
 
     id = Column(Integer, primary_key=True, index=True)
@@ -26,6 +30,7 @@ class User(Base):
     email = Column(String, nullable=False, unique=True, index=True)
     password_hash = Column(String, nullable=False)
     role = Column(String, nullable=False, default="user")
+    status = Column(String, nullable=False, default="pending")
     is_active = Column(Boolean, nullable=False, default=True)
     organization = relationship("Organization", back_populates="users")
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

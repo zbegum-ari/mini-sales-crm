@@ -11,6 +11,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.models.organization import Organization
 from app.models.user import User
 
 JWT_SECRET_KEY = os.getenv("CRM_JWT_SECRET", "mini-sales-crm-v2-dev-secret")
@@ -148,7 +149,50 @@ def get_current_user(
     if user is None:
         raise credentials_exception
 
-    if not user.is_active:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User is inactive")
+    ensure_user_can_access_app(user)
 
     return user
+
+
+def get_user_access_error_detail(user: User) -> str | None:
+    if user.role == "platform_admin":
+        if user.status == "pending":
+            return "Your account is waiting for approval."
+        if user.status == "rejected":
+            return "Your account was rejected."
+        if user.status == "inactive" or not user.is_active:
+            return "Your account is inactive."
+        return None
+
+    organization: Organization | None = user.organization
+
+    if user.status == "pending" or organization is None or organization.status == "pending":
+        return "Your account is waiting for approval."
+    if user.status == "rejected" or organization.status == "rejected":
+        return "Your account was rejected."
+    if (
+        user.status == "inactive"
+        or organization.status == "inactive"
+        or not user.is_active
+    ):
+        return "Your account is inactive."
+
+    return None
+
+
+def ensure_user_can_access_app(user: User):
+    detail = get_user_access_error_detail(user)
+    if detail is not None:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=detail)
+
+
+def require_platform_admin(current_user: User = Depends(get_current_user)) -> User:
+    if current_user.role != "platform_admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Platform admin access required")
+    return current_user
+
+
+def require_org_admin(current_user: User = Depends(get_current_user)) -> User:
+    if current_user.role != "org_admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Organization admin access required")
+    return current_user
